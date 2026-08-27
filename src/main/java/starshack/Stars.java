@@ -1,5 +1,15 @@
 package starshack;
 
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.client.ClientCommandHandler;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import starshack.clickgui.ClickGui;
 import starshack.clickgui.NovolineClickGui;
 import starshack.command.CommandManager;
@@ -15,29 +25,14 @@ import starshack.keystroke.KeyStrokeRenderer;
 import starshack.lag.handler.UnifiedLagHandler;
 import starshack.module.Module;
 import starshack.module.ModuleManager;
+import starshack.module.setting.impl.SliderSetting;
 import starshack.script.ScriptDefaults;
 import starshack.script.ScriptManager;
 import starshack.script.model.Entity;
 import starshack.script.model.NetworkPlayer;
-import starshack.utility.BlockHighlightSharedHandler;
-import starshack.utility.Utils;
-import starshack.utility.ModuleUtils;
-import starshack.utility.PacketsHandler;
-import starshack.utility.PlayerRelationsManager;
-import starshack.utility.ReflectionUtils;
+import starshack.utility.*;
 import starshack.utility.profile.Profile;
 import starshack.utility.profile.ProfileManager;
-import starshack.module.setting.impl.SliderSetting;
-import net.minecraft.client.Minecraft;
-import net.minecraftforge.client.ClientCommandHandler;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -72,10 +67,36 @@ public class Stars {
         moduleManager = new ModuleManager();
     }
 
+    /**
+     * ★【新增方法】自动保存：如果当前 profile 的 saved 标记为 false（被 Setting 改动置脏），
+     * 则写盘并复位标记。由 onTick 每 tick 调用。
+     * 链式访问 getModule()，无需 import ProfileModule。
+     */
+    private static void autoSaveProfile() {
+        if (Stars.currentProfile == null || Stars.profileManager == null) {
+            return;
+        }
+        if (Stars.currentProfile.getModule() != null && !Stars.currentProfile.getModule().saved) {
+            Stars.profileManager.saveProfile(Stars.currentProfile);
+            Stars.currentProfile.getModule().saved = true;
+        }
+    }
+
     @EventHandler
     public void init(FMLInitializationEvent e) {
         Runtime.getRuntime().addShutdownHook(new Thread(scheduledExecutor::shutdown));
         Runtime.getRuntime().addShutdownHook(new Thread(cachedExecutor::shutdown));
+
+        // ★【修改③】关闭游戏兜底存盘（防崩溃/强杀时没存上）
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                if (Stars.currentProfile != null && Stars.profileManager != null) {
+                    Stars.profileManager.saveProfile(Stars.currentProfile);
+                }
+            } catch (Throwable ignored) {
+                // 关闭阶段环境可能已销毁，异常不影响退出
+            }
+        }));
 
         ClientCommandHandler.instance.registerCommand(new KeyStrokeCommand());
 
@@ -101,6 +122,16 @@ public class Stars {
         ScriptDefaults.reloadModules();
         scriptManager.loadScripts();
         profileManager.loadProfiles();
+
+        // ★【修改①】启动时把当前 profile 的设置值灌回所有 Setting（缺这行 = 存了也读不回来）
+        if (Stars.currentProfile == null && Stars.profileManager != null
+                && Stars.profileManager.profiles != null && !Stars.profileManager.profiles.isEmpty()) {
+            Stars.currentProfile = Stars.profileManager.profiles.get(0);
+        }
+        if (Stars.currentProfile != null) {
+            profileManager.loadProfile(Stars.currentProfile.getName());
+        }
+
         ReflectionUtils.setKeyBindings();
 
         commandManager = new CommandManager();
@@ -109,6 +140,9 @@ public class Stars {
     @SubscribeEvent
     public void onTick(ClientTickEvent e) {
         if (e.phase == Phase.END) {
+            // ★【修改②】自动保存：检测到脏标记就存盘（放在最前，不依赖 nullCheck，任何情况都能存）
+            autoSaveProfile();
+
             if (Utils.nullCheck()) {
                 if (mc.thePlayer.ticksExisted % 6000 == 0) { // reset cache every 5 minutes
                     Entity.clearCache();

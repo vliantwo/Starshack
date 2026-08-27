@@ -2,6 +2,7 @@ package starshack.module.setting;
 
 import com.google.gson.JsonObject;
 import starshack.Stars;
+import starshack.clickgui.ClickGui;
 import starshack.clickgui.components.impl.CategoryComponent;
 import starshack.clickgui.components.impl.ModuleComponent;
 import starshack.module.Module;
@@ -19,7 +20,7 @@ public abstract class Setting {
             return;
         }
         this.visible = visible;
-        for (CategoryComponent categoryComponent : Stars.clickGui.categories) {
+        for (CategoryComponent categoryComponent : ClickGui.categories) {
             if (categoryComponent.category == module.moduleCategory()) {
                 for (ModuleComponent moduleComponent : categoryComponent.modules) {
                     if (moduleComponent.mod.getName().equals(module.getName())) {

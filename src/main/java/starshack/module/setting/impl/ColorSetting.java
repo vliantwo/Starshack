@@ -1,9 +1,10 @@
 package starshack.module.setting.impl;
 
 import com.google.gson.JsonObject;
+import starshack.Stars;                    // ★ 新增
 import starshack.module.setting.Setting;
 
-import java.awt.Color;
+import java.awt.*;
 
 public class ColorSetting extends Setting {
     private int red;
@@ -55,31 +56,30 @@ public class ColorSetting extends Setting {
         return alpha;
     }
 
+    // ★ 改动1：setAlpha 标脏
     public void setAlpha(int alpha) {
         this.alpha = clamp(alpha);
+        markConfigDirty();
     }
 
+    // ★ 改动2：setColor(r,g,b) 标脏（setColor(r,g,b,a) 内部调它，自动覆盖）
     public void setColor(int r, int g, int b) {
         this.red = clamp(r);
         this.green = clamp(g);
         this.blue = clamp(b);
+        markConfigDirty();
     }
 
     public void setColor(int r, int g, int b, int a) {
-        setColor(r, g, b);
+        setColor(r, g, b);          // → 已标脏
         this.alpha = clamp(a);
+        markConfigDirty();          // 无害，可保留
     }
 
-    /**
-     * ARGB packed int.
-     */
     public int getColor() {
         return (alpha << 24) | (red << 16) | (green << 8) | blue;
     }
 
-    /**
-     * RGB packed int (no alpha).
-     */
     public int getRGB() {
         return (red << 16) | (green << 8) | blue;
     }
@@ -99,9 +99,7 @@ public class ColorSetting extends Setting {
         return hsb[2];
     }
 
-    /**
-     * @param hueDegrees 0-360
-     */
+    // ★ 改动3：setFromHSB 标脏（setHue/setSaturation/setBrightness 内部调它，自动覆盖）
     public void setFromHSB(float hueDegrees, float saturation, float brightness) {
         int rgb = Color.HSBtoRGB(hueDegrees / 360f,
                 Math.max(0f, Math.min(1f, saturation)),
@@ -109,21 +107,22 @@ public class ColorSetting extends Setting {
         this.red = (rgb >> 16) & 0xFF;
         this.green = (rgb >> 8) & 0xFF;
         this.blue = rgb & 0xFF;
+        markConfigDirty();
     }
 
     public void setHue(float hueDegrees) {
         float[] hsb = Color.RGBtoHSB(red, green, blue, null);
-        setFromHSB(hueDegrees, hsb[1], hsb[2]);
+        setFromHSB(hueDegrees, hsb[1], hsb[2]);     // → 已标脏
     }
 
     public void setSaturation(float saturation) {
         float[] hsb = Color.RGBtoHSB(red, green, blue, null);
-        setFromHSB(hsb[0] * 360f, saturation, hsb[2]);
+        setFromHSB(hsb[0] * 360f, saturation, hsb[2]);  // → 已标脏
     }
 
     public void setBrightness(float brightness) {
         float[] hsb = Color.RGBtoHSB(red, green, blue, null);
-        setFromHSB(hsb[0] * 360f, hsb[1], brightness);
+        setFromHSB(hsb[0] * 360f, hsb[1], brightness);  // → 已标脏
     }
 
     public boolean hasAlpha() {
@@ -135,6 +134,14 @@ public class ColorSetting extends Setting {
         return groupSetting == null ? getName() : groupSetting.getName() + "." + getName();
     }
 
+    // ★ 改动4：内联标脏
+    private void markConfigDirty() {
+        if (Stars.currentProfile != null && Stars.currentProfile.getModule() != null) {
+            Stars.currentProfile.getModule().saved = false;
+        }
+    }
+
+    // ★ loadProfile 原本就是直接赋值 → 不用改（天然不标脏）
     @Override
     public void loadProfile(JsonObject data) {
         String profileKey = getProfileKey();

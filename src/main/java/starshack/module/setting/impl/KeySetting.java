@@ -1,10 +1,11 @@
 package starshack.module.setting.impl;
 
 import com.google.gson.JsonObject;
-import starshack.helper.MouseHelper;
-import starshack.module.setting.Setting;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import starshack.Stars;                    // ★ 新增
+import starshack.helper.MouseHelper;
+import starshack.module.setting.Setting;
 
 public class KeySetting extends Setting {
     private int key;
@@ -34,8 +35,17 @@ public class KeySetting extends Setting {
         return group == null ? getName() : group.getName() + "." + getName();
     }
 
+    // ★ 改动1：setKey 标脏
     public void setKey(int key) {
         this.key = key;
+        markConfigDirty();
+    }
+
+    // ★ 改动2：内联标脏
+    private void markConfigDirty() {
+        if (Stars.currentProfile != null && Stars.currentProfile.getModule() != null) {
+            Stars.currentProfile.getModule().saved = false;
+        }
     }
 
     public boolean isPressed() {
@@ -49,6 +59,7 @@ public class KeySetting extends Setting {
         }
     }
 
+    // ★ loadProfile 原本就是直接赋值 → 不用改（天然不标脏）
     @Override
     public void loadProfile(JsonObject data) {
         String profileKey = getProfileKey();
