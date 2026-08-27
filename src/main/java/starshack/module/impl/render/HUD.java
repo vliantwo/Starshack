@@ -119,7 +119,7 @@ public class HUD extends Module {
 
         this.registerSetting(new DescriptionSetting("Scoreboard"));
         this.registerSetting(replaceScoreboardServerIp = new ButtonSetting("Replace server IP", true));
-        this.registerSetting(scoreboardServerIp = new TextSetting("Server IP", "www.novoline.wtf", "www.novoline.wtf", 64) {
+        this.registerSetting(scoreboardServerIp = new TextSetting("Server IP", "Stars On Top", "Stars On Top", 64) {
             @Override
             public void loadProfile(JsonObject data) {
                 String key = getProfileKey();

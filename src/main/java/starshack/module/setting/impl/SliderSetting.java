@@ -1,20 +1,21 @@
 package starshack.module.setting.impl;
 
 import com.google.gson.JsonObject;
+import net.minecraftforge.common.MinecraftForge;
+import starshack.Stars;                    // ★ 新增（若主类路径不同请改这行）
 import starshack.event.PostSetSliderEvent;
 import starshack.module.setting.Setting;
-import net.minecraftforge.common.MinecraftForge;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 public class SliderSetting extends Setting {
-    private String settingName;
+    private final String settingName;
     private String[] options = null;
     private double defaultValue;
-    private double max;
-    private double min;
-    private double intervals;
+    private final double max;
+    private final double min;
+    private final double intervals;
     public boolean isString;
     private String suffix = "";
     public boolean canBeDisabled;
@@ -124,25 +125,39 @@ public class SliderSetting extends Setting {
         return this.max;
     }
 
+    // ★ 改动1：setValue 末尾标脏（GUI 拖 slider / 代码改值都走这里）
     public double setValue(double newValue) {
         newValue = correctValue(newValue, this.min, this.max);
         newValue = (double) Math.round(newValue * (1.0D / this.intervals)) / (1.0D / this.intervals);
-        return this.defaultValue = newValue;
+        this.defaultValue = newValue;
+        markConfigDirty();
+        return newValue;
     }
 
+    // ★ 不用改：内部已调 setValue，自动标脏
     public void setValueWithEvent(double newValue) {
         double prev = this.defaultValue;
         MinecraftForge.EVENT_BUS.post(new PostSetSliderEvent(prev, this.setValue(newValue)));
     }
 
+    // ★ 不用改：raw 路径给加载用，不标脏
     public void setValueRaw(double n) {
         this.defaultValue = n;
     }
 
+    // ★ 改动2：带事件的 raw 设值（用户交互）也标脏
     public void setValueRawWithEvent(double n) {
         double prev = this.defaultValue;
         this.defaultValue = n;
         MinecraftForge.EVENT_BUS.post(new PostSetSliderEvent(prev, n));
+        markConfigDirty();
+    }
+
+    // ★ 改动3：新增内联标脏（不依赖继承，直接访问 Stars）
+    private void markConfigDirty() {
+        if (Stars.currentProfile != null && Stars.currentProfile.getModule() != null) {
+            Stars.currentProfile.getModule().saved = false;
+        }
     }
 
     public static double correctValue(double v, double i, double a) {
@@ -165,6 +180,7 @@ public class SliderSetting extends Setting {
         }
     }
 
+    // ★ 改动4：loadProfile 直接赋值（同样校正），不标脏（加载 ≠ 修改）
     @Override
     public void loadProfile(JsonObject data) {
         String profileKey = getProfileKey();
@@ -190,10 +206,13 @@ public class SliderSetting extends Setting {
 
             }
             if (newValue == -1) {
-                setValueRaw(newValue);
+                this.defaultValue = newValue;   // ★ 直接赋值，不标脏
                 return;
             }
-            setValue(newValue);
+            // ★ 与 setValue 相同校正逻辑，但【不标脏】
+            newValue = correctValue(newValue, this.min, this.max);
+            newValue = (double) Math.round(newValue * (1.0D / this.intervals)) / (1.0D / this.intervals);
+            this.defaultValue = newValue;
         }
     }
 }
