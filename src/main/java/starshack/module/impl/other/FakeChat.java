@@ -1,0 +1,35 @@
+package starshack.module.impl.other;
+
+import starshack.module.Module;
+import starshack.module.setting.impl.DescriptionSetting;
+import starshack.utility.Utils;
+import net.minecraft.util.ChatComponentText;
+
+public class FakeChat extends Module {
+    public static String msg = "&eThis is a fake chat message.";
+    public static final String command = "fakechat";
+    public static final String c4 = "&cInvalid message.";
+
+    public FakeChat() {
+        super("Fake Chat", Module.category.misc, 0);
+        this.registerSetting(new DescriptionSetting("Command: '§e" + command + " [msg]§r'"));
+    }
+
+    public void onEnable() {
+        if (msg.contains("\\n")) {
+            String[] split = msg.split("\\\\n");
+
+            for (String s : split) {
+                this.sm(s);
+            }
+        } else {
+            this.sm(msg);
+        }
+
+        this.disable();
+    }
+
+    private void sm(String txt) {
+        mc.thePlayer.addChatMessage(new ChatComponentText(Utils.formatColor(txt)));
+    }
+}
