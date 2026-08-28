@@ -1,12 +1,6 @@
 package starshack.mixin.impl.entity;
 
 import com.google.common.collect.Maps;
-import starshack.event.JumpEvent;
-import starshack.event.PreMotionEvent;
-import starshack.event.PrePlayerMovementInputEvent;
-import starshack.module.ModuleManager;
-import starshack.module.impl.client.Settings;
-import starshack.utility.RotationUtils;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -23,6 +17,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import starshack.event.JumpEvent;
+import starshack.event.PreMotionEvent;
+import starshack.event.PrePlayerMovementInputEvent;
+import starshack.module.ModuleManager;
+import starshack.module.impl.client.Settings;
+import starshack.utility.RotationUtils;
 
 import java.util.Map;
 
@@ -53,10 +53,14 @@ public abstract class MixinEntityLivingBase extends Entity {
     @Shadow
     public float swingProgress;
 
-    @Inject(method = {"updateDistance", "func_110146_f"}, at = @At("HEAD"), cancellable = true)
-    protected void injectUpdateDistance(float p_110146_1_, float p_110146_2_, CallbackInfoReturnable<Float> cir) {
+    // ★ 改写：@Overwrite 完整接管 updateDistance，消除 "Unable to determine descriptor" 警告
+    @Overwrite
+    protected float updateDistance(float p_110146_1_, float p_110146_2_) {
         float rotationYaw = this.rotationYaw;
-        if (Settings.fullBody != null && Settings.rotateBody != null && !Settings.fullBody.isToggled() && Settings.rotateBody.isToggled() && (EntityLivingBase) (Object) this instanceof EntityPlayerSP && PreMotionEvent.setRenderYaw()) {
+        if (Settings.fullBody != null && Settings.rotateBody != null
+                && !Settings.fullBody.isToggled() && Settings.rotateBody.isToggled()
+                && (EntityLivingBase) (Object) this instanceof EntityPlayerSP
+                && PreMotionEvent.setRenderYaw()) {
             if (this.swingProgress > 0F) {
                 p_110146_1_ = RotationUtils.renderYaw;
             }
@@ -72,7 +76,6 @@ public abstract class MixinEntityLivingBase extends Entity {
         if (f1 < -75.0F) {
             f1 = -75.0F;
         }
-
         if (f1 >= 75.0F) {
             f1 = 75.0F;
         }
@@ -82,12 +85,11 @@ public abstract class MixinEntityLivingBase extends Entity {
         if (f1 * f1 > 2500.0F) {
             this.renderYawOffset += f1 * 0.2F;
         }
-
         if (flag) {
             p_110146_2_ *= -1.0F;
         }
 
-        cir.setReturnValue(p_110146_2_);
+        return p_110146_2_;
     }
 
     @Shadow
@@ -121,7 +123,9 @@ public abstract class MixinEntityLivingBase extends Entity {
 
     @Inject(method = "isPotionActive(Lnet/minecraft/potion/Potion;)Z", at = @At("HEAD"), cancellable = true)
     private void isPotionActive(Potion p_isPotionActive_1_, final CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        if (ModuleManager.antiDebuff != null && ModuleManager.antiDebuff.isEnabled() && ((p_isPotionActive_1_ == Potion.confusion && ModuleManager.antiDebuff.removeNausea.isToggled()) || (p_isPotionActive_1_ == Potion.blindness && ModuleManager.antiDebuff.removeBlindness.isToggled()))) {
+        if (ModuleManager.antiDebuff != null && ModuleManager.antiDebuff.isEnabled()
+                && ((p_isPotionActive_1_ == Potion.confusion && ModuleManager.antiDebuff.removeNausea.isToggled())
+                || (p_isPotionActive_1_ == Potion.blindness && ModuleManager.antiDebuff.removeBlindness.isToggled()))) {
             if (ModuleManager.antiDebuff.removeSideEffects.isToggled()) {
                 callbackInfoReturnable.setReturnValue(false);
             }
@@ -132,9 +136,7 @@ public abstract class MixinEntityLivingBase extends Entity {
     private void onMoveEntityWithHeadingRedirect(EntityLivingBase self, float originalStrafing, float originalForward) {
         if (self instanceof EntityPlayerSP) {
             PrePlayerMovementInputEvent event = new PrePlayerMovementInputEvent(originalForward, originalStrafing);
-
             MinecraftForge.EVENT_BUS.post(event);
-
             self.moveEntityWithHeading(event.strafe, event.forward);
         } else {
             self.moveEntityWithHeading(originalStrafing, originalForward);
