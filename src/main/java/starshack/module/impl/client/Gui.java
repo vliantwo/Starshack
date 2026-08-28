@@ -1,6 +1,7 @@
 package starshack.module.impl.client;
 
 import starshack.Stars;
+import starshack.clickgui.StarsClickGui;
 import starshack.module.Module;
 import starshack.module.setting.impl.ButtonSetting;
 import starshack.module.setting.impl.SliderSetting;
@@ -16,6 +17,7 @@ public class Gui extends Module {
     public static SliderSetting novolineDesign;
     public static SliderSetting backgroundBlur;
     public static SliderSetting scrollSpeed;
+    public static SliderSetting useStarsGui;           // ★ 新增：0=Novoline, 1=Stars
     public static ButtonSetting removePlayerModel;
     public static ButtonSetting darkBackground;
     public static ButtonSetting removeWatermark;
@@ -28,6 +30,7 @@ public class Gui extends Module {
         this.registerSetting(font = new SliderSetting("Font", FontManager.getDefaultEclipseFontOptionIndex(), GUI_FONT_OPTIONS));
         this.registerSetting(backgroundBlur = new SliderSetting("Background blur", "%", 0, 0, 100, 1));
         this.registerSetting(scrollSpeed = new SliderSetting("Scroll speed", 20, 2, 90, 1));
+        this.registerSetting(useStarsGui = new SliderSetting("GUI style", 1, new String[]{"Novoline", "Stars"}));  // ★ 默认 1=Stars
         this.registerSetting(darkBackground = new ButtonSetting("Dark background", true));
         this.registerSetting(rainBowOutlines = new ButtonSetting("Rainbow outlines", true));
         this.registerSetting(removePlayerModel = new ButtonSetting("Remove player model", false));
@@ -36,11 +39,18 @@ public class Gui extends Module {
 
     @Override
     public void onEnable() {
-        if (Utils.nullCheck() && mc.currentScreen != Stars.clickGui) {
-            mc.displayGuiScreen(Stars.clickGui);
-            Stars.clickGui.initMain();
+        if (Utils.nullCheck() && mc.currentScreen == null) {
+            if (useStarsGui != null && (int) useStarsGui.getInput() == 1) {
+                // ★ 新界面：直接 new，不用 Stars.clickGui 单例
+                mc.displayGuiScreen(new StarsClickGui());
+            } else {
+                // 兼容旧界面（保留，可随时切回对比）
+                mc.displayGuiScreen(Stars.clickGui);
+                if (Stars.clickGui != null) {
+                    Stars.clickGui.initMain();
+                }
+            }
         }
-
         this.disable();
     }
 
@@ -48,7 +58,6 @@ public class Gui extends Module {
         if (font == null) {
             return GUI_FONT_OPTIONS[0];
         }
-
         int index = (int) Math.max(0, Math.min(font.getOptions().length - 1, font.getInput()));
         return font.getOptions()[index];
     }
@@ -65,7 +74,7 @@ public class Gui extends Module {
         if (guiScale == null) {
             return 1.0F;
         }
-
         return (float) Math.max(0.5D, Math.min(2.0D, guiScale.getInput()));
     }
 }
+
