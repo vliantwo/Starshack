@@ -5,23 +5,23 @@ import starshack.module.impl.client.Gui;
 import starshack.module.impl.client.Relationships;
 import starshack.module.impl.client.Settings;
 import starshack.module.impl.combat.*;
-import starshack.module.impl.fun.*;
+import starshack.module.impl.combat.autoclicker.VapeAutoClicker;
+import starshack.module.impl.fun.ExtraBobbing;
+import starshack.module.impl.fun.FlameTrail;
+import starshack.module.impl.fun.SlyPort;
+import starshack.module.impl.fun.Spin;
 import starshack.module.impl.minigames.*;
 import starshack.module.impl.movement.*;
-import starshack.module.impl.movement.MovementFix;
+import starshack.module.impl.movement.Timer;
 import starshack.module.impl.other.*;
 import starshack.module.impl.player.*;
 import starshack.module.impl.render.*;
-import starshack.module.impl.world.*;
+import starshack.module.impl.world.AntiBot;
+import starshack.module.impl.world.Weather;
 import starshack.utility.font.RavenFontRenderer;
 import starshack.utility.profile.Manager;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ModuleManager {
     public static List<Module> modules = new ArrayList<>();
@@ -45,6 +45,7 @@ public class ModuleManager {
     public static NoSlow noSlow;
     public static KillAura killAura;
     public static AutoClicker autoClicker;
+    public static VapeAutoClicker vapeAutoClicker;   // ★ Vape V4 风格连点器
     public static KnockbackDelay knockbackDelay;
     public static HitBox hitBox;
     public static Reach reach;
@@ -116,6 +117,9 @@ public class ModuleManager {
         this.addModule(new TPAura());
         this.addModule(velocity = new Velocity());
         this.addModule(wTap = new WTap());
+
+        // ★ Vape V4 风格 AutoClicker（与上方 Novoline 版 AutoClicker 并存，互不影响）
+        this.addModule(vapeAutoClicker = new VapeAutoClicker());
 
         this.addModule(new ExtraBobbing());
         this.addModule(new FlameTrail());
