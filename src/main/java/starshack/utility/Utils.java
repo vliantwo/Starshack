@@ -3,20 +3,6 @@ package starshack.utility;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
-import starshack.Stars;
-import starshack.helper.MouseHelper;
-import starshack.mixin.impl.accessor.IAccessorGuiIngame;
-import starshack.mixin.impl.accessor.IAccessorItemFood;
-import starshack.mixin.impl.accessor.IAccessorMinecraft;
-import starshack.mixin.impl.accessor.IAccessorPlayerControllerMP;
-import starshack.module.Module;
-import starshack.module.ModuleManager;
-import starshack.module.impl.client.Settings;
-import starshack.module.impl.minigames.DuelsStats;
-import starshack.module.impl.player.Freecam;
-import starshack.module.impl.world.AntiBot;
-import starshack.module.setting.impl.SliderSetting;
-import starshack.utility.color.ColorConstants;
 import net.minecraft.block.*;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiInventory;
@@ -44,6 +30,20 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import starshack.Stars;
+import starshack.helper.MouseHelper;
+import starshack.mixin.impl.accessor.IAccessorGuiIngame;
+import starshack.mixin.impl.accessor.IAccessorItemFood;
+import starshack.mixin.impl.accessor.IAccessorMinecraft;
+import starshack.mixin.impl.accessor.IAccessorPlayerControllerMP;
+import starshack.module.Module;
+import starshack.module.ModuleManager;
+import starshack.module.impl.client.Settings;
+import starshack.module.impl.minigames.DuelsStats;
+import starshack.module.impl.player.Freecam;
+import starshack.module.impl.world.AntiBot;
+import starshack.module.setting.impl.SliderSetting;
+import starshack.utility.color.ColorConstants;
 
 import java.awt.*;
 import java.io.BufferedReader;
@@ -196,7 +196,7 @@ public class Utils implements IMinecraftInstance {
         float ff2 = MathHelper.sin(-yaw * 0.017453292f - 3.1415927f);
         float ff3 = -MathHelper.cos(-pitch * 0.017453292f);
         float ff4 = MathHelper.sin(-pitch * 0.017453292f);
-        Vec3 lookVec = new Vec3((double) (ff2 * ff3), (double) ff4, (double) (ff * ff3));
+        Vec3 lookVec = new Vec3(ff2 * ff3, ff4, ff * ff3);
         double lookVecX = lookVec.xCoord * max_reach;
         double lookVecY = lookVec.yCoord * max_reach;
         double lookVecZ = lookVec.zCoord * max_reach;
@@ -207,7 +207,7 @@ public class Utils implements IMinecraftInstance {
             if (entity == en) {
                 if (entity.canBeCollidedWith()) {
                     float cbs = entity.getCollisionBorderSize();
-                    AxisAlignedBB axis = entity.getEntityBoundingBox().expand((double) cbs, (double) cbs, (double) cbs);
+                    AxisAlignedBB axis = entity.getEntityBoundingBox().expand(cbs, cbs, cbs);
                     MovingObjectPosition mop = axis.calculateIntercept(eyeVec, sumVec);
                     if (mop != null) {
                         return eyeVec.squareDistanceTo(mop.hitVec);
@@ -399,9 +399,9 @@ public class Utils implements IMinecraftInstance {
     }
 
     public static String getCompilerDirectory() {
-        String tempDirStr = System.getProperty("java.io.tmpdir") + "cmF2ZW5fc2NyaXB0cw";
+        String tempDirStr = System.getProperty("java.io.tmpdir") + "c3RhcnNoYWNrX3NjcmlwdHM";
         if (System.getProperty("os.name").toLowerCase().contains("linux")) {
-            File tempDir = new File(mc.mcDataDir + File.separator + "keystrokes" + File.separator + "scripts", "compiler_temp");
+            File tempDir = new File(mc.mcDataDir + File.separator + "starshack" + File.separator + "scripts", "compiler_temp");
             if (!tempDir.exists()) {
                 if (!tempDir.mkdirs()) {
                     return tempDirStr;
@@ -418,9 +418,7 @@ public class Utils implements IMinecraftInstance {
         }
         if (friends.add(name.toLowerCase())) {
             sendMessage("&7Added &afriend&7: &b" + name);
-            if (enemies.contains(name.toLowerCase())) {
-                enemies.remove(name.toLowerCase());
-            }
+            enemies.remove(name.toLowerCase());
             return true;
         }
         return false;
@@ -458,13 +456,8 @@ public class Utils implements IMinecraftInstance {
         fov *= 0.5;
         final double wrapAngleTo180_double = MathHelper.wrapAngleTo180_double((viewPoint.rotationYaw - RotationUtils.angle(posX, posZ)) % 360.0f);
         if (wrapAngleTo180_double > 0.0) {
-            if (wrapAngleTo180_double < fov) {
-                return true;
-            }
-        } else if (wrapAngleTo180_double > -fov) {
-            return true;
-        }
-        return false;
+            return wrapAngleTo180_double < fov;
+        } else return wrapAngleTo180_double > -fov;
     }
 
     public static boolean inFov(float origin, float fov, float targetYaw) {
@@ -491,17 +484,11 @@ public class Utils implements IMinecraftInstance {
     }
 
     public static boolean bowBackwards() {
-        if (holdingBow() && mc.thePlayer.moveStrafing == 0 && mc.thePlayer.moveForward <= 0 && isMoving()) {
-            return true;
-        }
-        return false;
+        return holdingBow() && mc.thePlayer.moveStrafing == 0 && mc.thePlayer.moveForward <= 0 && isMoving();
     }
 
     public static boolean noSlowingBackWithBow() {
-        if (ModuleManager.noSlow.noSlowing && bowBackwards()) {
-            return true;
-        }
-        return false;
+        return ModuleManager.noSlow.noSlowing && bowBackwards();
     }
 
     public static void sendMessage(String txt) {
@@ -1334,16 +1321,16 @@ public class Utils implements IMinecraftInstance {
         final float cos = MathHelper.cos(-rotationYaw * 0.017453292f - 3.1415927f);
         final float sin = MathHelper.sin(-rotationYaw * 0.017453292f - 3.1415927f);
         final float n2 = -MathHelper.cos(-rotationPitch * 0.017453292f);
-        final Vec3 vec3 = new Vec3((double) (sin * n2), (double) MathHelper.sin(-rotationPitch * 0.017453292f), cos * n2);
+        final Vec3 vec3 = new Vec3(sin * n2, MathHelper.sin(-rotationPitch * 0.017453292f), cos * n2);
         final Vec3 addVector = getPositionEyes.addVector(vec3.xCoord * (double) range, vec3.yCoord * (double) range, vec3.zCoord * (double) range);
         Vec3 vec4 = null;
         final List getEntitiesWithinAABBExcludingEntity = mc.theWorld.getEntitiesWithinAABBExcludingEntity(mc.getRenderViewEntity(), mc.getRenderViewEntity().getEntityBoundingBox().addCoord(vec3.xCoord * (double) range, vec3.yCoord * (double) range, vec3.zCoord * (double) range).expand(1.0, 1.0, 1.0));
-        double n3 = (double) range;
+        double n3 = range;
         for (int i = 0; i < getEntitiesWithinAABBExcludingEntity.size(); ++i) {
             final Entity entity2 = (Entity) getEntitiesWithinAABBExcludingEntity.get(i);
             if (entity2.canBeCollidedWith()) {
                 final float getCollisionBorderSize = entity2.getCollisionBorderSize();
-                final AxisAlignedBB expand = entity2.getEntityBoundingBox().expand((double) getCollisionBorderSize, (double) getCollisionBorderSize, (double) getCollisionBorderSize);
+                final AxisAlignedBB expand = entity2.getEntityBoundingBox().expand(getCollisionBorderSize, getCollisionBorderSize, getCollisionBorderSize);
                 final MovingObjectPosition calculateIntercept = expand.calculateIntercept(getPositionEyes, addVector);
                 if (expand.isVecInside(getPositionEyes)) {
                     if (0.0 < n3 || n3 == 0.0) {
@@ -1523,10 +1510,7 @@ public class Utils implements IMinecraftInstance {
         if (block == null) {
             return false;
         }
-        if (BlockUtils.isInteractable(block) || block instanceof BlockSnow || block instanceof BlockWeb || block instanceof BlockSapling || block instanceof BlockDaylightDetector || block instanceof BlockBeacon || block instanceof BlockBanner || block instanceof BlockEndPortalFrame || block instanceof BlockEndPortal || block instanceof BlockLever || block instanceof BlockButton || block instanceof BlockSkull || block instanceof BlockLiquid || block instanceof BlockCactus || block instanceof BlockDoublePlant || block instanceof BlockLilyPad || block instanceof BlockCarpet || block instanceof BlockTripWire || block instanceof BlockTripWireHook || block instanceof BlockTallGrass || block instanceof BlockFlower || block instanceof BlockFlowerPot || block instanceof BlockSign || block instanceof BlockLadder || block instanceof BlockTorch || block instanceof BlockRedstoneTorch || block instanceof BlockStairs || block instanceof BlockSlab || block instanceof BlockFence || block instanceof BlockPane || block instanceof BlockStainedGlassPane || block instanceof BlockGravel || block instanceof BlockClay || block instanceof BlockSand || block instanceof BlockSoulSand || block instanceof BlockRailBase) {
-            return false;
-        }
-        return true;
+        return !BlockUtils.isInteractable(block) && !(block instanceof BlockSnow) && !(block instanceof BlockWeb) && !(block instanceof BlockSapling) && !(block instanceof BlockDaylightDetector) && !(block instanceof BlockBeacon) && !(block instanceof BlockBanner) && !(block instanceof BlockEndPortalFrame) && !(block instanceof BlockEndPortal) && !(block instanceof BlockLever) && !(block instanceof BlockButton) && !(block instanceof BlockSkull) && !(block instanceof BlockLiquid) && !(block instanceof BlockCactus) && !(block instanceof BlockDoublePlant) && !(block instanceof BlockLilyPad) && !(block instanceof BlockCarpet) && !(block instanceof BlockTripWire) && !(block instanceof BlockTripWireHook) && !(block instanceof BlockTallGrass) && !(block instanceof BlockFlower) && !(block instanceof BlockFlowerPot) && !(block instanceof BlockSign) && !(block instanceof BlockLadder) && !(block instanceof BlockTorch) && !(block instanceof BlockRedstoneTorch) && !(block instanceof BlockStairs) && !(block instanceof BlockSlab) && !(block instanceof BlockFence) && !(block instanceof BlockPane) && !(block instanceof BlockStainedGlassPane) && !(block instanceof BlockGravel) && !(block instanceof BlockClay) && !(block instanceof BlockSand) && !(block instanceof BlockSoulSand) && !(block instanceof BlockRailBase);
     }
 
     public static <E extends Enum<E>> E getEnum(Class<E> enumClass, String value) {
@@ -1583,9 +1567,7 @@ public class Utils implements IMinecraftInstance {
             List<String> sidebarLines = getSidebarLines();
             if (!sidebarLines.isEmpty()) {
                 String[] parts = stripColor(sidebarLines.get(1)).split("  ");
-                if (parts.length > 1 && parts[1].charAt(0) == 'L') {
-                    return true;
-                }
+                return parts.length > 1 && parts[1].charAt(0) == 'L';
             }
         }
         return false;
@@ -1605,10 +1587,7 @@ public class Utils implements IMinecraftInstance {
                 return false;
             }
             String stripped = stripString(objective.getDisplayName());
-            if (stripped.contains("BED WARS PRACTICE") || stripped.contains("REPLAY")) {
-                return true;
-            }
-            return false;
+            return stripped.contains("BED WARS PRACTICE") || stripped.contains("REPLAY");
         }
         return false;
     }
