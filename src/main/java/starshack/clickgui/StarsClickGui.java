@@ -3,6 +3,8 @@ package starshack.clickgui;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.shader.Framebuffer;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -21,7 +23,7 @@ import java.util.List;
 
 public final class StarsClickGui extends ClickGui {
 
-    // ===== Vape 主题色（内联，零外部依赖）=====
+    // ===== Vape 主题色（内联）=====
     private static final int BG_OVERLAY = 0x78000000;
     private static final int NAV = 0xFF14161E;
     private static final int CHANNELS = 0xFF1C2030;
@@ -55,9 +57,16 @@ public final class StarsClickGui extends ClickGui {
     private int x = 100, y = 100, settingsWidth = MIN_SETTINGS, windowHeight = MIN_HEIGHT;
     private boolean positioned;
 
+    // ===== 毛玻璃 FBO（1.8.9: net.minecraft.client.shader.Framebuffer）=====
+    private Framebuffer blurFbo;
+
     public StarsClickGui() {
         super();
         for (Module.category c : Module.category.values()) moduleScroll.put(c, 0.0F);
+    }
+
+    private int accent() {
+        return ACCENT;
     }
 
     // ===== 工具 =====
@@ -96,48 +105,6 @@ public final class StarsClickGui extends ClickGui {
             default:
                 return "?";
         }
-    }
-
-    private static String keyName(int k) {
-        if (k == 0) return "NONE";
-        if (k == 1069) return "MScrollUp";
-        if (k == 1070) return "MScrollDown";
-        if (k >= 1000) return "M" + (k - 1000);
-        String n = Keyboard.getKeyName(k);
-        return n == null ? "NONE" : n;
-    }
-
-    private int accent() {
-        return ACCENT;
-    }
-
-    @Override
-    public void initGui() {
-        super.initGui();
-        if (!positioned) {
-            this.x = Math.max(8, (this.width - totalWidth()) / 2);
-            this.y = Math.max(14, (this.height - windowHeight) / 2);
-            positioned = true;
-        }
-        constrainWindow();
-        if (!modules(selectedCategory).contains(selectedModule)) selectedModule = null;
-    }
-
-    @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        ScaledResolution res = new ScaledResolution(this.mc);
-        double scale = width <= 0 ? 1.0D : res.getScaledWidth() / (double) width;
-        int lx = (int) Math.floor(mouseX / scale), ly = (int) Math.floor(mouseY / scale);
-        updateWindowDrag(lx, ly);
-
-        Gui.drawRect(0, 0, res.getScaledWidth(), res.getScaledHeight(), BG_OVERLAY);
-        GlStateManager.pushMatrix();
-        GlStateManager.scale(scale, scale, 1.0D);
-        drawWindow(lx, ly);
-        drawTabs(lx, ly);
-        drawModules(lx, ly);
-        drawSettings(lx, ly);
-        GlStateManager.popMatrix();
     }
 
     private void drawWindow(int mx, int my) {
@@ -222,68 +189,13 @@ public final class StarsClickGui extends ClickGui {
         if (openCombo != null && settings.contains(openCombo)) drawComboOptions(openCombo, sy, mx, my);
     }
 
-    private void drawSetting(Setting setting, float sy, int mx, int my) {
-        float left = x + NAV_W + MODULES_W + 10.0F, right = x + NAV_W + MODULES_W + settingsWidth - 10.0F, cLeft = right - 70.0F;
-        NovolineFonts.thin(17).drawString(setting instanceof DescriptionSetting ? ((DescriptionSetting) setting).getDesc() : setting.getName(),
-                left, sy, setting instanceof DescriptionSetting ? TEXT_DIM : TEXT, false);
-        if (setting instanceof DescriptionSetting) return;
-
-        if (setting instanceof SliderSetting) {
-            SliderSetting s = (SliderSetting) setting;
-            if (s.isString) {
-                bordered(cLeft, sy - 2, right, sy + 8, inside(mx, my, cLeft, sy - 2, 70, 10) ? accent() : CONTROL_BG);
-                String[] o = s.getOptions();
-                int idx = (int) clamp((float) s.getInput(), 0, o.length - 1);
-                NovolineFonts.thin(16).drawCenteredString(o[idx], cLeft + 35, sy, TEXT);
-            } else {
-                double range = Math.max(0.00001D, s.getMax() - s.getMin());
-                float pct = (float) ((s.getInput() - s.getMin()) / range);
-                bordered(cLeft, sy + 2, right, sy + 4, CONTROL_BG);
-                Gui.drawRect((int) cLeft, (int) sy + 2, (int) (cLeft + 70 * pct), (int) sy + 4, accent());
-                drawCircle(cLeft + 70 * pct, sy + 3, 2, TEXT);
-                NovolineFonts.thin(12).drawCenteredString(Utils.asWholeNum(s.getInput()) + s.getSuffix(), cLeft + 70 * pct, sy - 5, TEXT);
-                if (activeSetting == s && Mouse.isButtonDown(0)) updateSlider(s, mx, cLeft);
-            }
-            return;
-        }
-        if (setting instanceof ButtonSetting) {
-            ButtonSetting b = (ButtonSetting) setting;
-            bordered(right - 10, sy - 2, right, sy + 8, CONTROL_BG);
-            if (b.isMethodButton) NovolineFonts.thin(16).drawCenteredString("+", right - 5, sy, accent());
-            else if (b.isToggled()) drawCheck(right - 8, sy + 2, CHECK);
-            return;
-        }
-        if (setting instanceof TextSetting) {
-            TextSetting t = (TextSetting) setting;
-            bordered(cLeft, sy - 2, right, sy + 8, activeSetting == setting ? accent() : CONTROL_BG);
-            String v = t.getText().isEmpty() ? t.getPlaceholder() : t.getText();
-            v = NovolineFonts.thin(16).trimStringToWidth(v, 64, true);
-            NovolineFonts.thin(16).drawString(v + (activeSetting == t && caretVisible() ? "|" : ""), cLeft + 2, sy, t.getText().isEmpty() ? MUTED : TEXT, false);
-            return;
-        }
-        if (setting instanceof KeySetting) {
-            bordered(cLeft, sy - 2, right, sy + 8, activeSetting == setting ? accent() : CONTROL_BG);
-            NovolineFonts.thin(16).drawCenteredString(activeSetting == setting ? "Press a key" : keyName(((KeySetting) setting).getKey()), cLeft + 35, sy, TEXT);
-            return;
-        }
-        if (setting instanceof ColorSetting) {
-            ColorSetting c = (ColorSetting) setting;
-            ColorMode mode = colorModes.getOrDefault(c, ColorMode.HUE);
-            float[] hsb = Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), null);
-            for (int i = 0; i < 70; i++) {
-                float v = i / 69.0F;
-                int rgb = mode == ColorMode.HUE ? Color.HSBtoRGB(v, hsb[1], hsb[2]) : mode == ColorMode.SATURATION ? Color.HSBtoRGB(hsb[0], v, hsb[2]) : Color.HSBtoRGB(hsb[0], hsb[1], v);
-                Gui.drawRect((int) cLeft + i, (int) sy - 2, (int) cLeft + i + 1, (int) sy + 8, rgb);
-            }
-            float marker = mode == ColorMode.HUE ? hsb[0] : mode == ColorMode.SATURATION ? hsb[1] : hsb[2];
-            Gui.drawRect((int) (cLeft + marker * 69), (int) sy - 2, (int) (cLeft + marker * 69) + 1, (int) sy + 8, TEXT);
-            if (activeSetting == c && Mouse.isButtonDown(0)) updateColor(c, mode, mx, cLeft);
-            return;
-        }
-        if (setting instanceof GroupSetting) {
-            GroupSetting g = (GroupSetting) setting;
-            NovolineFonts.thin(16).drawString(g.isOpened() ? "-" : "+", right - 8, sy, g.isOpened() ? accent() : TEXT, false);
-        }
+    private static String keyName(int k) {
+        if (k == 0) return "NONE";
+        if (k == 1069) return "MScrollUp";
+        if (k == 1070) return "MScrollDown";
+        if (k >= 1000) return "M" + (k - 1000);
+        String n = Keyboard.getKeyName(k);
+        return n == null ? "NONE" : n;
     }
 
     private void drawComboOptions(SliderSetting s, float sy, int mx, int my) {
@@ -443,18 +355,173 @@ public final class StarsClickGui extends ClickGui {
     }
 
     @Override
+    public void initGui() {
+        super.initGui();
+        if (!positioned) {
+            this.x = Math.max(8, (this.width - totalWidth()) / 2);
+            this.y = Math.max(14, (this.height - windowHeight) / 2);
+            positioned = true;
+        }
+        constrainWindow();
+        if (!modules(selectedCategory).contains(selectedModule)) selectedModule = null;
+
+        // 初始化毛玻璃 FBO（1.8.9 构造函数：width, height, useDepth）
+        if (blurFbo == null || blurFbo.framebufferWidth != mc.displayWidth || blurFbo.framebufferHeight != mc.displayHeight) {
+            if (blurFbo != null) blurFbo.deleteFramebuffer();
+            blurFbo = new Framebuffer(mc.displayWidth, mc.displayHeight, false);
+        }
+    }
+
+    @Override
+    public boolean doesGuiPauseGame() {
+        return false;
+    }
+
+    @Override
+    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        if (!OpenGlHelper.isFramebufferEnabled()) {
+            // 硬件不支持 FBO，降级为纯色遮罩
+            Gui.drawRect(0, 0, width, height, BG_OVERLAY);
+        } else {
+            drawBlurBackground();
+        }
+
+        ScaledResolution res = new ScaledResolution(this.mc);
+        double scale = width <= 0 ? 1.0D : res.getScaledWidth() / (double) width;
+        int lx = (int) Math.floor(mouseX / scale), ly = (int) Math.floor(mouseY / scale);
+        updateWindowDrag(lx, ly);
+
+        GlStateManager.pushMatrix();
+        GlStateManager.scale(scale, scale, 1.0D);
+        drawWindow(lx, ly);
+        drawTabs(lx, ly);
+        drawModules(lx, ly);
+        drawSettings(lx, ly);
+        GlStateManager.popMatrix();
+    }
+
+    // ===== 毛玻璃核心 =====
+    private void drawBlurBackground() {
+        if (blurFbo == null) return;
+
+        // 1. 拷贝当前游戏画面到 blurFbo
+        mc.getFramebuffer().bindFramebufferTexture();
+        blurFbo.bindFramebuffer(false);
+        drawFullscreenQuad(0, 0, blurFbo.framebufferWidth, blurFbo.framebufferHeight);
+        blurFbo.unbindFramebuffer();
+
+        // 2. 迭代模糊（3次）
+        for (int i = 0; i < 3; i++) {
+            blurFbo.bindFramebufferTexture();
+            blurFbo.bindFramebuffer(false);
+            double offset = 1.0 + i * 0.5;
+            drawFullscreenQuad(-offset, -offset, blurFbo.framebufferWidth + offset * 2, blurFbo.framebufferHeight + offset * 2);
+            blurFbo.unbindFramebuffer();
+        }
+
+        // 3. 画回屏幕，叠半透明暗色
+        GlStateManager.pushMatrix();
+        GlStateManager.disableDepth();
+        GlStateManager.enableBlend();
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        blurFbo.bindFramebufferTexture();
+        GlStateManager.color(0.0F, 0.0F, 0.0F, 0.47F);
+        drawFullscreenQuad(0, 0, width, height);
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableBlend();
+        GlStateManager.enableDepth();
+        GlStateManager.popMatrix();
+    }
+
+    private void drawFullscreenQuad(double x, double y, double w, double h) {
+        GL11.glBegin(GL11.GL_QUADS);
+        GL11.glTexCoord2f(0, 0);
+        GL11.glVertex2d(x, y);
+        GL11.glTexCoord2f(1, 0);
+        GL11.glVertex2d(x + w, y);
+        GL11.glTexCoord2f(1, 1);
+        GL11.glVertex2d(x + w, y + h);
+        GL11.glTexCoord2f(0, 1);
+        GL11.glVertex2d(x, y + h);
+        GL11.glEnd();
+    }
+
+    private void drawSetting(Setting setting, float sy, int mx, int my) {
+        float left = x + NAV_W + MODULES_W + 10.0F, right = x + NAV_W + MODULES_W + settingsWidth - 10.0F, cLeft = right - 70.0F;
+        NovolineFonts.thin(17).drawString(setting instanceof DescriptionSetting ? ((DescriptionSetting) setting).getDesc() : setting.getName(),
+                left, sy, setting instanceof DescriptionSetting ? TEXT_DIM : TEXT, false);
+        if (setting instanceof DescriptionSetting) return;
+
+        if (setting instanceof SliderSetting) {
+            SliderSetting s = (SliderSetting) setting;
+            if (s.isString) {
+                bordered(cLeft, sy - 2, right, sy + 8, inside(mx, my, cLeft, sy - 2, 70, 10) ? accent() : CONTROL_BG);
+                String[] o = s.getOptions();
+                int idx = (int) clamp((float) s.getInput(), 0, o.length - 1);
+                NovolineFonts.thin(16).drawCenteredString(o[idx], cLeft + 35, sy, TEXT);
+            } else {
+                double range = Math.max(0.00001D, s.getMax() - s.getMin());
+                float pct = (float) ((s.getInput() - s.getMin()) / range);
+                bordered(cLeft, sy + 2, right, sy + 4, CONTROL_BG);
+                Gui.drawRect((int) cLeft, (int) sy + 2, (int) (cLeft + 70 * pct), (int) sy + 4, accent());
+                drawCircle(cLeft + 70 * pct, sy + 3, 2, TEXT);
+                NovolineFonts.thin(12).drawCenteredString(Utils.asWholeNum(s.getInput()) + s.getSuffix(), cLeft + 70 * pct, sy - 5, TEXT);
+                if (activeSetting == s && Mouse.isButtonDown(0)) updateSlider(s, mx, cLeft);
+            }
+            return;
+        }
+        if (setting instanceof ButtonSetting) {
+            ButtonSetting b = (ButtonSetting) setting;
+            bordered(right - 10, sy - 2, right, sy + 8, CONTROL_BG);
+            if (b.isMethodButton) NovolineFonts.thin(16).drawCenteredString("+", right - 5, sy, accent());
+            else if (b.isToggled()) drawCheck(right - 8, sy + 2, CHECK);
+            return;
+        }
+        if (setting instanceof TextSetting) {
+            TextSetting t = (TextSetting) setting;
+            bordered(cLeft, sy - 2, right, sy + 8, activeSetting == t ? accent() : CONTROL_BG);
+            String v = t.getText().isEmpty() ? t.getPlaceholder() : t.getText();
+            v = NovolineFonts.thin(16).trimStringToWidth(v, 64, true);
+            NovolineFonts.thin(16).drawString(v + (activeSetting == t && caretVisible() ? "|" : ""), cLeft + 2, sy, t.getText().isEmpty() ? MUTED : TEXT, false);
+            return;
+        }
+        if (setting instanceof KeySetting) {
+            bordered(cLeft, sy - 2, right, sy + 8, activeSetting == setting ? accent() : CONTROL_BG);
+            NovolineFonts.thin(16).drawCenteredString(activeSetting == setting ? "Press a key" : keyName(((KeySetting) setting).getKey()), cLeft + 35, sy, TEXT);
+            return;
+        }
+        if (setting instanceof ColorSetting) {
+            ColorSetting c = (ColorSetting) setting;
+            ColorMode mode = colorModes.getOrDefault(c, ColorMode.HUE);
+            float[] hsb = Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), null);
+            for (int i = 0; i < 70; i++) {
+                float v = i / 69.0F;
+                int rgb = mode == ColorMode.HUE ? Color.HSBtoRGB(v, hsb[1], hsb[2]) : mode == ColorMode.SATURATION ? Color.HSBtoRGB(hsb[0], v, hsb[2]) : Color.HSBtoRGB(hsb[0], hsb[1], v);
+                Gui.drawRect((int) cLeft + i, (int) sy - 2, (int) cLeft + i + 1, (int) sy + 8, rgb);
+            }
+            float marker = mode == ColorMode.HUE ? hsb[0] : mode == ColorMode.SATURATION ? hsb[1] : hsb[2];
+            Gui.drawRect((int) (cLeft + marker * 69), (int) sy - 2, (int) (cLeft + marker * 69) + 1, (int) sy + 8, TEXT);
+            if (activeSetting == c && Mouse.isButtonDown(0)) updateColor(c, mode, mx, cLeft);
+            return;
+        }
+        if (setting instanceof GroupSetting) {
+            GroupSetting g = (GroupSetting) setting;
+            NovolineFonts.thin(16).drawString(g.isOpened() ? "-" : "+", right - 8, sy, g.isOpened() ? accent() : TEXT, false);
+        }
+    }
+
+    @Override
     public void onGuiClosed() {
         dragging = false;
         resizing = false;
         bindingModule = null;
         activeSetting = null;
         openCombo = null;
+        if (blurFbo != null) {
+            blurFbo.deleteFramebuffer();
+            blurFbo = null;
+        }
         super.onGuiClosed();
-    }
-
-    @Override
-    public boolean doesGuiPauseGame() {
-        return false;
     }
 
     private void bordered(float l, float t, float r, float b, int border) {
@@ -541,7 +608,6 @@ public final class StarsClickGui extends ClickGui {
         for (int i = 0; i < cats.length; i++) if (inside(mx, my, x + 7, y + 63 + i * sp - 15, 30, 30)) return cats[i];
         return null;
     }
-
     private Module moduleAt(int mx, int my) {
         if (!inside(mx, my, x + NAV_W, y + HEADER_H, MODULES_W, windowHeight - HEADER_H)) return null;
         float rowY = y + 30 + moduleScroll.get(selectedCategory);
