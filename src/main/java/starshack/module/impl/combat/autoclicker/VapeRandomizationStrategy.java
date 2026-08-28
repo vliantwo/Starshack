@@ -5,18 +5,14 @@ import java.util.Random;
 /**
  * Vape V4 风格的随机化算法。
  * <p>
- * Normal   : 均匀随机 (baseDelay ± 抖动)，最基础
- * Extra    : 多层概率（突发 + 长停顿 + 微抖），接近 Novoline-bS 的 nextDelay()
- * Extra+   : 高斯(正态) 分布 + 疲劳(越点越慢) + 漂移(长期均值偏移) + 爆发(短促连点)
+ * Normal : 均匀随机 (baseDelay ± 20%)
+ * Extra  : 多层概率（突发 + 长停顿 + 微抖），等价于 Novoline-bS 的 nextDelay()
+ * Extra+ : 高斯(正态) 分布 + 疲劳(越点越慢) + 漂移(长期均值偏移) + 爆发(短促连点)
  * <p>
  * 使用：nextDelay(rand, targetCPS) 返回毫秒延迟。
- * 最终都会被 clamp 到 [minDelayMs, maxDelayMs]，防止极端值。
+ * 调用方（VapeAutoClicker）会再做一次 clamp 到 [MIN_DELAY, MAX_DELAY]。
  */
 public class VapeRandomizationStrategy implements ClickStrategy {
-
-    // 延迟范围（毫秒）：低于 33ms ≈ 30 CPS，高于 250ms ≈ 4 CPS，超出人类范围会被 clamp
-    private static final int MIN_DELAY = 33;
-    private static final int MAX_DELAY = 250;
 
     private final int mode; // RandomizationMode.NORMAL / EXTRA / EXTRA_PLUS
 
@@ -43,10 +39,10 @@ public class VapeRandomizationStrategy implements ClickStrategy {
         }
 
         // 通用 clamp + 偶发硬边界（模拟偶尔的"卡一下"）
-        delay = Math.max(MIN_DELAY, Math.min(MAX_DELAY, delay));
+        delay = Math.max(20, Math.min(1000, delay));
         if (rand.nextInt(100) < 2) {        // 2% 概率极长停顿（像真人分神）
             delay += 50 + rand.nextInt(80);
-            delay = Math.min(MAX_DELAY, delay);
+            delay = Math.min(1000, delay);
         }
         return delay;
     }
@@ -63,7 +59,7 @@ public class VapeRandomizationStrategy implements ClickStrategy {
 
     /**
      * Extra：多层概率分布（突发 + 长停顿 + 微抖）
-     * 这是 Novoline-bS nextDelay() 的等价实现，已验证有效。
+     * 等价于 Novoline-bS nextDelay()，已验证有效。
      */
     private int extra(int baseDelay, Random rand) {
         int variation = rand.nextInt(baseDelay + 1) - (baseDelay / 2);
@@ -89,21 +85,20 @@ public class VapeRandomizationStrategy implements ClickStrategy {
     /**
      * Extra+：高斯 + 疲劳 + 漂移 + 爆发
      * 用 Box-Muller 产生正态分布，集中在 targetCPS 附近，更符合真人节奏。
+     * 疲劳/漂移的累积由 VapeAutoClicker 外部处理（需跨点击保持状态）。
      */
     private int extraPlus(int baseDelay, Random rand) {
         // 1. 高斯分布（均值 = baseDelay，标准差 = baseDelay/4）
         double u = rand.nextDouble(), v = rand.nextDouble();
+        // 避免 u/v 恰好为 0 导致 log(0) / 除零
+        if (u <= 0.0) u = 1.0e-9;
+        if (v <= 0.0) v = 1.0e-9;
         double z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
         double mean = baseDelay;
         double stddev = Math.max(2.0, baseDelay / 4.0);
         int delay = (int) (mean + z * stddev);
 
-        // 2. 疲劳：越点越慢（每 50 次点击后均值上浮 5%，模拟手指疲劳）
-        //    -> 由外部调用者重置，这里只提供抖动
-        // 3. 漂移：长期均值缓慢偏移（±15%），模拟节奏变化
-        //    -> 由 VapeAutoClicker 的 drift 逻辑处理
-
-        // 4. 爆发：5% 概率极短点击（像连按）
+        // 2. 爆发：5% 概率极短点击（像连按）
         if (rand.nextInt(100) < 5) {
             delay = Math.max(20, baseDelay / 3);
         }

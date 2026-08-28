@@ -8,7 +8,9 @@ import java.util.Random;
  */
 public interface ClickStrategy {
     /**
+     * @param rand      随机数生成器
      * @param targetCPS 目标 CPS（clicks per second）
+     * @return 下一次点击的延迟（毫秒）
      */
     long nextDelay(Random rand, double targetCPS);
 }
