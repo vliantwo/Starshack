@@ -1,6 +1,7 @@
 package starshack.utility.profile;
 
 import com.google.gson.*;
+import net.minecraftforge.common.MinecraftForge;
 import starshack.Stars;
 import starshack.clickgui.ClickGui;
 import starshack.clickgui.components.impl.CategoryComponent;
@@ -16,17 +17,10 @@ import starshack.module.impl.render.HUD;
 import starshack.module.impl.render.PotionHUD;
 import starshack.module.impl.render.TargetHUD;
 import starshack.module.setting.Setting;
-import starshack.module.setting.impl.BlockListSetting;
-import starshack.module.setting.impl.ButtonSetting;
-import starshack.module.setting.impl.ColorSetting;
-import starshack.module.setting.impl.KeySetting;
-import starshack.module.setting.impl.SliderSetting;
-import starshack.module.setting.impl.StringListSetting;
-import starshack.module.setting.impl.TextSetting;
+import starshack.module.setting.impl.*;
 import starshack.script.Manager;
 import starshack.utility.IMinecraftInstance;
 import starshack.utility.Utils;
-import net.minecraftforge.common.MinecraftForge;
 
 import java.io.File;
 import java.io.FileReader;
@@ -64,7 +58,7 @@ public class ProfileManager implements IMinecraftInstance {
     public List<Profile> profiles = new ArrayList<>();
 
     public ProfileManager() {
-        directory = new File(mc.mcDataDir + File.separator + "keystrokes", "profiles");
+        directory = new File(mc.mcDataDir + File.separator + "starshack", "profiles");
         if (!directory.exists()) {
             boolean success = directory.mkdirs();
             if (!success) {
@@ -243,7 +237,7 @@ public class ProfileManager implements IMinecraftInstance {
                         continue;
                     }
 
-                    Module module = Stars.moduleManager.getModule(moduleName);
+                    Module module = ModuleManager.getModule(moduleName);
                     if (module == null && moduleName.startsWith("sc-") && Stars.scriptManager != null) {
                         for (Module module1 : Stars.scriptManager.scripts.values()) {
                             if (module1.getName().equals(moduleName.substring(3))) {
@@ -657,10 +651,10 @@ public class ProfileManager implements IMinecraftInstance {
         if (managerModule instanceof starshack.utility.profile.Manager) {
             ((starshack.utility.profile.Manager) managerModule).rebuildProfileSettings();
         }
-        if (Stars.clickGui == null || Stars.clickGui.categories == null) {
+        if (Stars.clickGui == null || ClickGui.categories == null) {
             return;
         }
-        for (CategoryComponent categoryComponent : Stars.clickGui.categories) {
+        for (CategoryComponent categoryComponent : ClickGui.categories) {
             if (categoryComponent.category == Module.category.configs) {
                 categoryComponent.reloadModules(true);
                 break;
@@ -698,7 +692,7 @@ public class ProfileManager implements IMinecraftInstance {
             }
         }
         for (Profile profile : profiles) {
-            if (profile.getName().equalsIgnoreCase(profileName) && (currentName == null || !profile.getName().equalsIgnoreCase(currentName))) {
+            if (profile.getName().equalsIgnoreCase(profileName) && (!profile.getName().equalsIgnoreCase(currentName))) {
                 return "Profile already exists: " + profileName;
             }
         }
