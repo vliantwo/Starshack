@@ -11,11 +11,9 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Mouse;
-import starshack.event.PrePlayerInteractEvent;
 import starshack.module.Module;
 import starshack.module.ModuleManager;
 import starshack.module.impl.combat.KillAura;
-import starshack.module.setting.impl.SliderSetting;
 import starshack.utility.ReflectionUtils;
 import starshack.utility.Utils;
 
@@ -25,28 +23,27 @@ import java.util.Random;
  * Vape V4 风格 AutoClicker（L4 架构）。
  * <p>
  * 架构：
- * 感知(Context)  →  决策(State Machine: IDLE/AIMING/BURST)  →  策略(ClickStrategy)  →  执行(KeyBinding + 反射)
+ * 感知(Context) → 决策(State: IDLE/AIMING/BURST) → 策略(ClickStrategy) → 执行(KeyBinding + 反射)
  * <p>
  * Vape V4 差异化特性：
  * - Randomization 三档（Normal / Extra / Extra+）
  * - Trigger Mode（Always / Hover / Weapon）
  * - Limit to Item + Item Mode
  * - Break Blocks 增强（Delay + OnlyWithTool）
- * - Jitter（Off / Low / High，yaw/pitch 抖动）
+ * - Jitter（Off / Low / High）
  * - Fatigue / Drift / DoubleClick（Extra+ 特性）
  * - CPS 差值提示（Vape 社区共识：diff >= 4）
- * <p>
- * 完全对齐你的项目 API（category.combat、Utils.nullCheck、ReflectionUtils.setButton 等）。
  */
 public class VapeAutoClicker extends Module {
 
-    // ============ 其他 ============
-    private final Random rand = new Random();
-    // ============ 配置 ============
-    public VapeAutoClickerConfig cfg;
-    private State state = State.IDLE;
+    // ============ 常量 ============
+    private static final int MIN_DELAY = 20;   // 50 CPS 上限，防极端
+    private static final int MAX_DELAY = 1000; // 1 CPS 下限
 
     // ============ 点击调度 ============
+    private final Random rand = new Random();
+    public VapeAutoClickerConfig cfg;
+    private State state = State.IDLE;
     private long nextClickTime = 0L;
     private int clickCount = 0;          // 用于 Fatigue
     private double driftOffset = 0;      // 漂移累计（Extra+）
@@ -55,16 +52,16 @@ public class VapeAutoClicker extends Module {
     private boolean isHoldingBlockBreak = false;
 
     public VapeAutoClicker() {
-        super("Auto Clicker V4", category.combat, 0);   // V4 后缀：与原版 AutoClicker 区分（GUI 名 + Profile 键）
+        // ★ 对齐真实 Module 构造器：Module(String name, category cat)（无 keycode 的三参构造不存在，用两参）
+        super("Auto Clicker V4", Module.category.combat);
         this.cfg = new VapeAutoClickerConfig(this);
-        this.closetModule = true;
+        this.closetModule = true;   // ★ 真实字段名是 closetModule（少一个 t），已在 Module.java:32 确认
     }
 
     @Override
     public String getInfo() {
         double cps = cfg.getCPS();
         String mode = RandomizationMode.nameOf(cfg.getRandomization());
-        // Vape 风格：显示 "10.0 | Extra" 并提示差值
         return String.format("%.1f | %s", cps, mode);
     }
 
@@ -84,6 +81,7 @@ public class VapeAutoClicker extends Module {
         clickCount = 0;
         driftOffset = 0;
         state = State.IDLE;
+        releaseBreak();
     }
 
     // ================= 主逻辑（RenderTick，每帧）=================
@@ -95,14 +93,14 @@ public class VapeAutoClicker extends Module {
         // 1. 感知：当前上下文
         Context ctx = collect();
 
-        // 2. 决策：状态流转（Trigger Mode 在这里生效）
-        State next = updateState(ctx);
-
-        // 3. 破块处理（Break Blocks，沿用 Novoline 反射手法）
+        // 2. 破块处理（Break Blocks，沿用 Novoline 反射手法）—— 必须在决策前，影响 state
         handleBreakBlocks(ctx);
 
+        // 3. 决策：状态流转（Trigger Mode 在这里生效）
+        State next = updateState(ctx);
+
         // 4. Jitter（点击时微调瞄准，反检测）
-        if (cfg.jitter != null && cfg.getJitter() != VapeEnums.Jitter.OFF) {
+        if (cfg.isJitterEnabled()) {
             applyJitter(ctx);
         }
 
@@ -123,14 +121,13 @@ public class VapeAutoClicker extends Module {
         ctx.inCreative = mc.thePlayer.capabilities.isCreativeMode;
         ctx.inGame = (mc.currentScreen == null && mc.inGameHasFocus);
 
-        // 准星对着的可攻击实体（Trigger Mode = Hover 时用）
-        if (mc.objectMouseOver != null && mc.objectMouseOver.entityHit instanceof EntityLivingBase) {
-            ctx.target = (EntityLivingBase) mc.objectMouseOver.entityHit;
-        }
-
-        // 准星对着的可破方块（Break Blocks 时用）
-        if (mc.objectMouseOver != null && mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-            ctx.breakPos = mc.objectMouseOver.getBlockPos();
+        if (mc.objectMouseOver != null) {
+            if (mc.objectMouseOver.entityHit instanceof EntityLivingBase) {
+                ctx.target = (EntityLivingBase) mc.objectMouseOver.entityHit;
+            }
+            if (mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                ctx.breakPos = mc.objectMouseOver.getBlockPos();
+            }
         }
         ctx.canEdit = mc.thePlayer.capabilities.allowEdit;
         return ctx;
@@ -171,12 +168,15 @@ public class VapeAutoClicker extends Module {
 
     // ================= 策略层：下一次延迟 =================
     private long nextDelay() {
+        int randomization = cfg.getRandomization();
+        double cps = cfg.getCPS();
+
         // 根据 Randomization 档位选策略
-        ClickStrategy strategy = new VapeRandomizationStrategy(cfg.getRandomization());
-        long delay = strategy.nextDelay(rand, cfg.getCPS());
+        ClickStrategy strategy = new VapeRandomizationStrategy(randomization);
+        long delay = strategy.nextDelay(rand, cps);
 
         // ---- Extra+ 专属：Fatigue（越点越慢）----
-        if (cfg.getRandomization() == RandomizationMode.EXTRA_PLUS && cfg.fatigue.isToggled()) {
+        if (randomization == RandomizationMode.EXTRA_PLUS && cfg.fatigue.isToggled()) {
             clickCount++;
             if (clickCount > 50) {
                 double fatigue = 1.0 + (clickCount - 50) * 0.01; // 每多一次 +1%
@@ -185,7 +185,7 @@ public class VapeAutoClicker extends Module {
         }
 
         // ---- Extra+ 专属：Drift（长期均值偏移）----
-        if (cfg.getRandomization() == RandomizationMode.EXTRA_PLUS && cfg.drift.isToggled()) {
+        if (randomization == RandomizationMode.EXTRA_PLUS && cfg.drift.isToggled()) {
             driftOffset += (rand.nextDouble() - 0.5) * 2.0; // ±1ms/click
             driftOffset = Math.max(-15, Math.min(15, driftOffset));
             delay += (long) driftOffset;
@@ -196,14 +196,15 @@ public class VapeAutoClicker extends Module {
             delay = Math.max(20, delay / 2);  // 半延迟 = 双击
         }
 
-        return Math.max(20, delay);
+        return Math.max(MIN_DELAY, Math.min(MAX_DELAY, delay));
     }
 
     // ================= 执行层 =================
     private void doClick() {
-        int key = mc.gameSettings.keyBindAttack.getKeyCode();
-        KeyBinding.onTick(key);
-        ReflectionUtils.setButton(0, true);   // 沿用 Novoline 反射手法，模拟按下
+        // ★ 沿用 Novoline 反射手法：setButton(0, true) 模拟左键按下
+        ReflectionUtils.setButton(0, true);
+        // 配合一次 keybind tick，确保 Minecraft 识别到点击
+        KeyBinding.onTick(mc.gameSettings.keyBindAttack.getKeyCode());
     }
 
     // ================= Break Blocks（沿用 Novoline 逻辑 + Vape 增强）=================
@@ -253,7 +254,7 @@ public class VapeAutoClicker extends Module {
     private void applyJitter(Context ctx) {
         if (ctx.target == null) return;  // 没对着目标不抖
         int level = cfg.getJitter();     // 1=Low, 2=High
-        float amount = (level == VapeEnums.Jitter.HIGH) ? 1.0F : 0.4F;
+        float amount = (level >= VapeEnums.Jitter.HIGH) ? 1.0F : 0.4F;
 
         if (rand.nextBoolean()) {
             mc.thePlayer.rotationYaw += (rand.nextFloat() - 0.5F) * 2 * amount;
@@ -279,7 +280,7 @@ public class VapeAutoClicker extends Module {
     }
 
     private boolean matchesItemMode() {
-        int mode = (int) cfg.itemMode.getInput();
+        int mode = cfg.getTriggerMode();  // 0=Sword, 1=Any
         ItemStack held = mc.thePlayer.getHeldItem();
         if (held == null) return false;
         if (mode == VapeEnums.ItemMode.ANY) {
@@ -287,13 +288,6 @@ public class VapeAutoClicker extends Module {
         }
         // SWORD：只有拿剑才点
         return held.getItem() instanceof ItemSword;
-    }
-
-    // ================= KillAura 回调兼容 =================
-    @SubscribeEvent
-    public void onPrePlayerInteract(PrePlayerInteractEvent e) {
-        // 保留原版 PrePlayerInteract 钩子（如需要可与 RenderTick 并存）
-        // Vape 主逻辑已在 onRenderTick 完成，这里留给子类扩展。
     }
 
     // ============ 状态机 ============

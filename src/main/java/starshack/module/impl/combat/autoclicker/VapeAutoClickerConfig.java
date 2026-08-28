@@ -7,18 +7,18 @@ import starshack.module.setting.impl.SliderSetting;
 /**
  * Vape V4 风格的 AutoClicker 配置。
  * <p>
- * 关键点：你项目没有 ModeSetting，所以 "Randomization" 这种枚举选项
- * 用 SliderSetting(int, String[]) 的选项模式模拟：
- * new SliderSetting("Randomization", 0, new String[]{"Normal","Extra","Extra+"})
- * 拖动时取整数 0/1/2，对应 RandomizationMode 常量。
+ * 关键点：项目没有 ModeSetting，所以 "Randomization / Trigger mode / Item mode / Jitter"
+ * 这类枚举选项一律用 SliderSetting(int, String[]) 的【选项模式】模拟：
+ * new SliderSetting("Name", 默认索引, new String[]{"A","B","C"})
+ * 拖动时取整数 0/1/2...，对应 VapeEnums / RandomizationMode 常量。
  * <p>
- * 其余 Setting（ButtonSetting / SliderSetting）都是你项目原生支持的。
+ * ⚠️ 重要：凡是"选项模式"的字段，声明类型必须是 SliderSetting，不能是 ButtonSetting。
  */
 public class VapeAutoClickerConfig {
 
     // ---- 基础 ----
-    public SliderSetting targetCPS;        // 目标 CPS（范围）
-    public SliderSetting randomization;    // Randomization：0=Normal,1=Extra,2=Extra+
+    public SliderSetting targetCPS;        // 目标 CPS（连续数值）
+    public SliderSetting randomization;    // Randomization：0=Normal, 1=Extra, 2=Extra+
 
     // ---- 高级随机化（Extra+）----
     public ButtonSetting fatigue;          // 疲劳：越点越慢
@@ -26,9 +26,9 @@ public class VapeAutoClickerConfig {
     public ButtonSetting doubleClick;      // 偶尔双击
 
     // ---- Vape 风格情景控制 ----
-    public SliderSetting triggerMode;      // 0=Always,1=Hover(对着实体),2=Weapon(手持武器)
+    public SliderSetting triggerMode;      // 0=Always, 1=Hover(对着实体), 2=Weapon(手持武器)
     public ButtonSetting limitToItem;      // 限制手持物品
-    public SliderSetting itemMode;         // 0=Sword,1=Any(拿东西就点)
+    public SliderSetting itemMode;         // 0=Sword, 1=Any(拿东西就点)
 
     // ---- Break Blocks（沿用 Novoline 的反射破块，增强版）----
     public ButtonSetting breakBlocks;
@@ -39,17 +39,17 @@ public class VapeAutoClickerConfig {
     public ButtonSetting simulateExhaust;  // 模拟饥饿消耗
     public ButtonSetting notUsingItem;    // 用物品时不点
     public ButtonSetting disableCreative; // 创造模式不点
-    public ButtonSetting jitter;          // Jitter：0=Off,1=Low,2=High
+    public SliderSetting jitter;          // ★ 修复：Jitter 用选项模式 → 必须是 SliderSetting（0=Off,1=Low,2=High）
 
     // ---- Vape 社区共识：CPS 差值校验 ----
     public SliderSetting safeRange;        // 推荐的 CPS 区间(用于 getInfo 提示)
 
     public VapeAutoClickerConfig(Module module) {
-        // targetCPS：范围 1~20，默认 10
+        // targetCPS：连续数值滑块，1~20，默认 10
         this.targetCPS = new SliderSetting("Target CPS", 10.0, 1.0, 20.0, 0.5);
         module.registerSetting(targetCPS);
 
-        // Randomization：用 SliderSetting 选项模式模拟 ModeSetting
+        // Randomization：选项模式（int 索引 + String[]）
         this.randomization = new SliderSetting("Randomization",
                 RandomizationMode.NORMAL, RandomizationMode.NAMES);
         module.registerSetting(randomization);
@@ -82,6 +82,8 @@ public class VapeAutoClickerConfig {
         module.registerSetting(notUsingItem);
         this.disableCreative = new ButtonSetting("Disable in creative", false);
         module.registerSetting(disableCreative);
+
+        // ★ Jitter：选项模式（Off/Low/High）→ SliderSetting，字段类型也必须是 SliderSetting
         this.jitter = new SliderSetting("Jitter", VapeEnums.Jitter.OFF, VapeEnums.Jitter.NAMES);
         module.registerSetting(jitter);
 
@@ -92,15 +94,25 @@ public class VapeAutoClickerConfig {
     // ================= 取值辅助（供主模块调用）=================
 
     public int getRandomization() {
-        return (int) randomization.getInput();   // 0/1/2
+        return (int) Math.round(randomization.getInput());   // 0/1/2
     }
 
     public int getTriggerMode() {
-        return (int) triggerMode.getInput();
+        return (int) Math.round(triggerMode.getInput());
     }
 
+    /**
+     * ★ 修复：jitter 现在是 SliderSetting，有 getInput()（返回 double），强转 int 即得 0/1/2
+     */
     public int getJitter() {
-        return (int) jitter.getInput();           // 0=Off,1=Low,2=High
+        return (int) Math.round(jitter.getInput());           // 0=Off, 1=Low, 2=High
+    }
+
+    /**
+     * 便捷：是否启用抖动（非 Off 即为启用）
+     */
+    public boolean isJitterEnabled() {
+        return getJitter() > 0;
     }
 
     public double getCPS() {
@@ -119,6 +131,6 @@ public class VapeAutoClickerConfig {
      * Vape 社区共识：CPS 差值 = max - min，差值 >= 4 更自然
      */
     public double getCPSDiff() {
-        return safeRange.getInput();  // 这里借用 safeRange 显示推荐差值
+        return safeRange.getInput();  // 借用 safeRange 显示推荐差值
     }
 }
