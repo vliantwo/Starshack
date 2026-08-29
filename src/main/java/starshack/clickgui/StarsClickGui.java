@@ -4,7 +4,6 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.shader.Framebuffer;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -30,8 +29,8 @@ public final class StarsClickGui extends ClickGui {
     private static final int CONTENT = 0xFF1C2030;
     private static final int HEADER = 0xFF111214;
     private static final int ROW_HOVER = 0xFF2A3045;
-    private static final int ACCENT = 0x0099FF;
-    private static final int ACCENT_CYAN = 0x00E5FF;
+    private static final int ACCENT = 0xFF0099FF;   // ← 改了：加了 0xFF
+    private static final int ACCENT_CYAN = 0xFF00E5FF;   // ← 改了：加了 0xFF
     private static final int TEXT = 0xFFE8ECF2;
     private static final int TEXT_DIM = 0xFF8A90A0;
     private static final int MUTED = 0xFF6B7280;
@@ -56,9 +55,6 @@ public final class StarsClickGui extends ClickGui {
     private int dragOffsetX, dragOffsetY, resizeOffsetX, resizeOffsetY;
     private int x = 100, y = 100, settingsWidth = MIN_SETTINGS, windowHeight = MIN_HEIGHT;
     private boolean positioned;
-
-    // ===== 毛玻璃 FBO（1.8.9: net.minecraft.client.shader.Framebuffer）=====
-    private Framebuffer blurFbo;
 
     public StarsClickGui() {
         super();
@@ -210,7 +206,6 @@ public final class StarsClickGui extends ClickGui {
         endScissor();
     }
 
-    // ===== 输入 =====
     @Override
     public void mouseClicked(int mx, int my, int button) throws IOException {
         int right = x + totalWidth();
@@ -355,6 +350,16 @@ public final class StarsClickGui extends ClickGui {
     }
 
     @Override
+    public void onGuiClosed() {
+        dragging = false;
+        resizing = false;
+        bindingModule = null;
+        activeSetting = null;
+        openCombo = null;
+        super.onGuiClosed();
+    }
+
+    @Override
     public void initGui() {
         super.initGui();
         if (!positioned) {
@@ -364,28 +369,12 @@ public final class StarsClickGui extends ClickGui {
         }
         constrainWindow();
         if (!modules(selectedCategory).contains(selectedModule)) selectedModule = null;
-
-        // 初始化毛玻璃 FBO（1.8.9 构造函数：width, height, useDepth）
-        if (blurFbo == null || blurFbo.framebufferWidth != mc.displayWidth || blurFbo.framebufferHeight != mc.displayHeight) {
-            if (blurFbo != null) blurFbo.deleteFramebuffer();
-            blurFbo = new Framebuffer(mc.displayWidth, mc.displayHeight, false);
-        }
-    }
-
-    @Override
-    public boolean doesGuiPauseGame() {
-        return false;
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        if (!OpenGlHelper.isFramebufferEnabled()) {
-            // 硬件不支持 FBO，降级为纯色遮罩
-            Gui.drawRect(0, 0, width, height, BG_OVERLAY);
-        } else {
-            drawBlurBackground();
-        }
-
+        mc.getFramebuffer().bindFramebuffer(false);
+        drawBlurBackground();
         ScaledResolution res = new ScaledResolution(this.mc);
         double scale = width <= 0 ? 1.0D : res.getScaledWidth() / (double) width;
         int lx = (int) Math.floor(mouseX / scale), ly = (int) Math.floor(mouseY / scale);
@@ -400,49 +389,44 @@ public final class StarsClickGui extends ClickGui {
         GlStateManager.popMatrix();
     }
 
-    // ===== 毛玻璃核心 =====
     private void drawBlurBackground() {
-        if (blurFbo == null) return;
-
-        // 1. 拷贝当前游戏画面到 blurFbo
-        mc.getFramebuffer().bindFramebufferTexture();
-        blurFbo.bindFramebuffer(false);
-        drawFullscreenQuad(0, 0, blurFbo.framebufferWidth, blurFbo.framebufferHeight);
-        blurFbo.unbindFramebuffer();
-
-        // 2. 迭代模糊（3次）
-        for (int i = 0; i < 3; i++) {
-            blurFbo.bindFramebufferTexture();
-            blurFbo.bindFramebuffer(false);
-            double offset = 1.0 + i * 0.5;
-            drawFullscreenQuad(-offset, -offset, blurFbo.framebufferWidth + offset * 2, blurFbo.framebufferHeight + offset * 2);
-            blurFbo.unbindFramebuffer();
+        if (!OpenGlHelper.isFramebufferEnabled()) {
+            Gui.drawRect(0, 0, width, height, BG_OVERLAY);
+            return;
         }
-
-        // 3. 画回屏幕，叠半透明暗色
+        mc.getFramebuffer().bindFramebufferTexture();
         GlStateManager.pushMatrix();
         GlStateManager.disableDepth();
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        blurFbo.bindFramebufferTexture();
-        GlStateManager.color(0.0F, 0.0F, 0.0F, 0.47F);
-        drawFullscreenQuad(0, 0, width, height);
+        GlStateManager.disableLighting();
+        int w = width, h = height;
+        float[] offsets = {-3.0F, -1.5F, 0.0F, 1.5F, 3.0F};
+        for (float ox : offsets) {
+            for (float oy : offsets) {
+                GlStateManager.color(1.0F, 1.0F, 1.0F, 0.04F);
+                drawTexturedFullscreenQuad(ox, oy, w, h);
+            }
+        }
+        GlStateManager.color(0.0F, 0.0F, 0.0F, 0.50F);
+        drawTexturedFullscreenQuad(0, 0, w, h);
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.disableBlend();
         GlStateManager.enableDepth();
         GlStateManager.popMatrix();
+        GlStateManager.bindTexture(0);
     }
 
-    private void drawFullscreenQuad(double x, double y, double w, double h) {
+    private void drawTexturedFullscreenQuad(float offsetX, float offsetY, int w, int h) {
         GL11.glBegin(GL11.GL_QUADS);
-        GL11.glTexCoord2f(0, 0);
-        GL11.glVertex2d(x, y);
-        GL11.glTexCoord2f(1, 0);
-        GL11.glVertex2d(x + w, y);
-        GL11.glTexCoord2f(1, 1);
-        GL11.glVertex2d(x + w, y + h);
-        GL11.glTexCoord2f(0, 1);
-        GL11.glVertex2d(x, y + h);
+        GL11.glTexCoord2f(0.0F, 1.0F);
+        GL11.glVertex2f(offsetX, offsetY);
+        GL11.glTexCoord2f(1.0F, 1.0F);
+        GL11.glVertex2f(w + offsetX, offsetY);
+        GL11.glTexCoord2f(1.0F, 0.0F);
+        GL11.glVertex2f(w + offsetX, h + offsetY);
+        GL11.glTexCoord2f(0.0F, 0.0F);
+        GL11.glVertex2f(offsetX, h + offsetY);
         GL11.glEnd();
     }
 
@@ -511,17 +495,8 @@ public final class StarsClickGui extends ClickGui {
     }
 
     @Override
-    public void onGuiClosed() {
-        dragging = false;
-        resizing = false;
-        bindingModule = null;
-        activeSetting = null;
-        openCombo = null;
-        if (blurFbo != null) {
-            blurFbo.deleteFramebuffer();
-            blurFbo = null;
-        }
-        super.onGuiClosed();
+    public boolean doesGuiPauseGame() {
+        return false;
     }
 
     private void bordered(float l, float t, float r, float b, int border) {
@@ -535,7 +510,7 @@ public final class StarsClickGui extends ClickGui {
         GL11.glEnable(GL11.GL_LINE_SMOOTH);
         GL11.glDisable(GL11.GL_TEXTURE_2D);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        Color c = new Color(color, true);
+        Color c = new Color(color, false); // ← 改了：false 忽略 alpha，保证不透明
         GL11.glColor4f(c.getRed() / 255f, c.getGreen() / 255f, c.getBlue() / 255f, c.getAlpha() / 255f);
         GL11.glLineWidth(1.0F);
         GL11.glBegin(GL11.GL_LINE_STRIP);
@@ -554,7 +529,7 @@ public final class StarsClickGui extends ClickGui {
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glDisable(GL11.GL_TEXTURE_2D);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        Color c = new Color(color, true);
+        Color c = new Color(color, false); // ← 改了：false 忽略 alpha，保证不透明
         GL11.glColor4f(c.getRed() / 255f, c.getGreen() / 255f, c.getBlue() / 255f, c.getAlpha() / 255f);
         GL11.glBegin(GL11.GL_TRIANGLE_FAN);
         GL11.glVertex2f(cx, cy);
