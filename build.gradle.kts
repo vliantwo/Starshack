@@ -167,7 +167,7 @@ tasks.register("buildMinecraft") {
 
     doLast {
         val builtJar = remapJar.archiveFile.get().asFile
-        val modsDir = file("C:/Users/stikr/AppData/Roaming/.minecraft/mods")
+        val modsDir = file(System.getenv("APPDATA") + "/.minecraft/mods")
 
         if (!modsDir.exists()) {
             modsDir.mkdirs()
