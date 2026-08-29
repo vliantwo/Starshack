@@ -4,6 +4,7 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -23,7 +24,6 @@ import java.util.stream.Collectors;
 
 public final class StarsClickGui extends ClickGui {
 
-    // ===== 主题色 =====
     private static final int BG_OVERLAY = 0x78000000;
     private static final int NAV = 0xFF14161E;
     private static final int CHANNELS = 0xFF1C2030;
@@ -42,6 +42,11 @@ public final class StarsClickGui extends ClickGui {
     private static final int SELECTED_BG = 0x00000000;
     private static final int BORDER_HIGHLIGHT = 0x14FFFFFF;
 
+    private static final boolean USE_IMAGE_LOGO = true;
+    private static final String LOGO_TEXT = "S";
+    private static final ResourceLocation LOGO_TEXTURE =
+            new ResourceLocation("starshack", "textures/gui/logo.png");
+
     private static final int NAV_W = 45, MIN_SETTINGS = 190, MIN_HEIGHT = 300, HEADER_H = 21;
     private static final int ROW_HEIGHT = 24;
     private static final int ROW_PADDING = 4;
@@ -50,12 +55,15 @@ public final class StarsClickGui extends ClickGui {
     private static final float SWITCH_H = 16.0F;
     private static final float SWITCH_PAD = 2.0F;
     private static final int SEARCH_BAR_H = 20;
-    private final Map<Module, Float> moduleHoverProgress = new IdentityHashMap<>();
-    private final Map<ButtonSetting, Float> switchAnimProgress = new IdentityHashMap<>();
+
     private float modulePanelWidth = 115F;
     private float targetModulePanelWidth = 115F;
+
     private float categoryFadeAlpha = 1F;
     private float categoryOffsetY = 0F;
+
+    private final Map<Module, Float> moduleHoverProgress = new IdentityHashMap<>();
+    private final Map<ButtonSetting, Float> switchAnimProgress = new IdentityHashMap<>();
 
     private final Map<Module.category, Float> moduleScroll = new EnumMap<>(Module.category.class);
     private final Map<Module, Float> settingScroll = new IdentityHashMap<>();
@@ -66,6 +74,7 @@ public final class StarsClickGui extends ClickGui {
     private Module bindingModule;
     private Setting activeSetting;
     private SliderSetting openCombo;
+
     private String searchQuery = "";
     private List<Module> filteredModules = new ArrayList<>();
     private boolean searching = false;
@@ -115,6 +124,11 @@ public final class StarsClickGui extends ClickGui {
         return n.substring(0, 1).toUpperCase(Locale.ROOT) + n.substring(1).toLowerCase(Locale.ROOT);
     }
 
+    // ★ 返回分类的完整名称（无前缀字母），用于 Header 标题
+    private static String categoryName(Module.category c) {
+        return c == null ? "" : title(c.name());
+    }
+
     private static String tabIcon(Module.category c) {
         if (c == null) return "?";
         switch (c) {
@@ -137,15 +151,6 @@ public final class StarsClickGui extends ClickGui {
             default:
                 return "?";
         }
-    }
-
-    private static String keyName(int k) {
-        if (k == 0) return "NONE";
-        if (k == 1069) return "MScrollUp";
-        if (k == 1070) return "MScrollDown";
-        if (k >= 1000) return "M" + (k - 1000);
-        String n = Keyboard.getKeyName(k);
-        return n == null ? "NONE" : n;
     }
 
     private List<Module> getDisplayModules() {
@@ -175,46 +180,15 @@ public final class StarsClickGui extends ClickGui {
         return (int) modulePanelWidth;
     }
 
-    // ===== 绘制：窗口框架 =====
-    private void drawWindow(int mx, int my) {
-        int right = x + totalWidth();
-
-        RenderUtils.drawRoundedRectangle(x, y, right, y + windowHeight, RADIUS_WINDOW, CONTENT);
-        RenderUtils.drawRoundedRectangle(x, y, x + NAV_W, y + windowHeight, RADIUS_WINDOW, NAV);
-        Gui.drawRect(x + NAV_W, y, x + NAV_W + modulePanelW(), y + windowHeight, CHANNELS);
-        Gui.drawRect(x + NAV_W, y, right, y + HEADER_H, HEADER);
-        RenderUtils.drawRoundedRectangle(x, y, right, y + 1, 1, BORDER_HIGHLIGHT);
-
-        RenderUtils.drawRoundedRectangle(x + 7, y + 5, x + 37, y + 35, 15.0F, 0xFF222838);
-        NovolineFonts.icons(35).drawCenteredString("?", x + 22, y + 14, TEXT);
-
-        NovolineFonts.thin(20).drawString(tabIcon(selectedCategory), x + 50, y + 7, TEXT, false);
-        NovolineFonts.thin(20).drawString(title(selectedCategory.name()), x + 63, y + 7, TEXT, false);
-        int modCount = getDisplayModules().size();
-        String countStr = modCount + " modules";
-        NovolineFonts.thin(14).drawString(countStr,
-                x + 63 + NovolineFonts.thin(20).stringWidth(title(selectedCategory.name())) + 10, y + 10, TEXT_DIM, false);
-
-        if (selectedModule != null) {
-            NovolineFonts.thin(20).drawString(selectedModule.getName() + " Settings", x + NAV_W + modulePanelW() + 15, y + 7, TEXT, false);
-        } else {
-            NovolineFonts.thin(16).drawCenteredString("S T A R S H A C K", x + NAV_W + modulePanelW() + settingsWidth / 2.0F, y + 7, TEXT_DIM);
-        }
-
-        if (selectedModule == null) {
-            String hint = "Select a module";
-            NovolineFonts.thin(18).drawCenteredString(hint,
-                    x + NAV_W + modulePanelW() + settingsWidth / 2.0F, y + windowHeight / 2.0F - 10, MUTED);
-            NovolineFonts.thin(22).drawCenteredString("<",
-                    x + NAV_W + modulePanelW() - 10, y + windowHeight / 2.0F - 12, MUTED);
-        }
-
-        if (inside(mx, my, right - 10, y + windowHeight - 10, 10, 10)) {
-            Gui.drawRect(right - 6, y + windowHeight - 2, right, y + windowHeight, accent());
-        }
+    private static String keyName(int k) {
+        if (k == 0) return "NONE";
+        if (k == 1069) return "MScrollUp";
+        if (k == 1070) return "MScrollDown";
+        if (k >= 1000) return "M" + (k - 1000);
+        String n = Keyboard.getKeyName(k);
+        return n == null ? "NONE" : n;
     }
 
-    // ===== 绘制：左侧分类 Tab =====
     private void drawTabs(int mx, int my) {
         Module.category[] cats = Module.category.values();
         float sp = cats.length <= 1 ? 35.0F : Math.min(35.0F, (windowHeight - 82.0F) / (cats.length - 1));
@@ -243,7 +217,6 @@ public final class StarsClickGui extends ClickGui {
         }
     }
 
-    // ===== 绘制：模块列表 =====
     private void drawModules(int mx, int my) {
         List<Module> mods = getDisplayModules();
         updateModulePanelWidth(mods);
@@ -323,7 +296,6 @@ public final class StarsClickGui extends ClickGui {
             NovolineFonts.thin(20).drawString(selectedModule.getName() + " Settings", x + NAV_W + modulePanelW() + 15, y + 7, TEXT, false);
     }
 
-    // ===== Tooltip =====
     private void drawTooltip(int mx, int my) {
         tooltipAlpha = lerp(tooltipAlpha, tooltipModule != null ? 1F : 0F, 0.15F);
         if (tooltipModule == null || tooltipAlpha < 0.05F) return;
@@ -350,7 +322,6 @@ public final class StarsClickGui extends ClickGui {
         GlStateManager.popMatrix();
     }
 
-    // ===== 绘制：设置面板（修复下拉框位置）=====
     private void drawSettings(int mx, int my) {
         if (selectedModule == null) return;
         List<Setting> settings = visibleSettings(selectedModule);
@@ -370,7 +341,6 @@ public final class StarsClickGui extends ClickGui {
         float sy = y + HEADER_H + 6.0F + scroll + categoryOffsetY;
         scissor(x + NAV_W + modulePanelW(), y + HEADER_H, settingsWidth, windowHeight - HEADER_H);
 
-        // ★ 记录下拉框应该画在哪个 Y 坐标
         float comboDrawY = -1;
         for (Setting s : settings) {
             if (s == openCombo) comboDrawY = sy;
@@ -379,7 +349,6 @@ public final class StarsClickGui extends ClickGui {
         }
         endScissor();
 
-        // ★ 用正确的坐标绘制下拉框
         if (openCombo != null && settings.contains(openCombo) && comboDrawY != -1) {
             drawComboOptions(openCombo, comboDrawY, mx, my);
         }
@@ -496,7 +465,6 @@ public final class StarsClickGui extends ClickGui {
         endScissor();
     }
 
-    // ===== 输入处理 =====
     @Override
     public void mouseClicked(int mx, int my, int button) throws IOException {
         int right = x + totalWidth();
@@ -564,7 +532,6 @@ public final class StarsClickGui extends ClickGui {
                     return;
                 }
             }
-            // 点到了下拉框以外的地方，关闭
             openCombo = null;
         }
         float sy = y + HEADER_H + 6.0F + scroll;
@@ -578,17 +545,7 @@ public final class StarsClickGui extends ClickGui {
         if (button == 0) activeSetting = null;
     }
 
-    @Override
-    public void mouseReleased(int mx, int my, int state) {
-        if (state == 0) {
-            dragging = false;
-            resizing = false;
-            if (activeSetting instanceof SliderSetting || activeSetting instanceof ColorSetting) activeSetting = null;
-        }
-    }
-
     private void handleSettingClick(Setting setting, int mx, float sy, int button) {
-        // ★ 点其他设置时自动关闭下拉框
         if (openCombo != null && setting != openCombo) {
             openCombo = null;
         }
@@ -618,6 +575,43 @@ public final class StarsClickGui extends ClickGui {
             }
         } else if (setting instanceof GroupSetting && button == 0)
             ((GroupSetting) setting).setOpened(!((GroupSetting) setting).isOpened());
+    }
+
+    private void drawWindow(int mx, int my) {
+        int right = x + totalWidth();
+
+        RenderUtils.drawRoundedRectangle(x, y, right, y + windowHeight, RADIUS_WINDOW, CONTENT);
+        RenderUtils.drawRoundedRectangle(x, y, x + NAV_W, y + windowHeight, RADIUS_WINDOW, NAV);
+        Gui.drawRect(x + NAV_W, y, x + NAV_W + modulePanelW(), y + windowHeight, CHANNELS);
+        Gui.drawRect(x + NAV_W, y, right, y + HEADER_H, HEADER);
+        RenderUtils.drawRoundedRectangle(x, y, right, y + 1, 1, BORDER_HIGHLIGHT);
+
+        RenderUtils.drawRoundedRectangle(x + 7, y + 5, x + 37, y + 35, 15.0F, 0xFF222838);
+        if (USE_IMAGE_LOGO) {
+            GlStateManager.color(1F, 1F, 1F, 1F);
+            GlStateManager.enableBlend();
+            mc.getTextureManager().bindTexture(LOGO_TEXTURE);
+            drawModalRectWithCustomSizedTexture(x + 10, y + 8, 0, 0, 24, 24, 24, 24);
+        } else {
+            NovolineFonts.thin(35).drawCenteredString(LOGO_TEXT, x + 22, y + 11, ACCENT_CYAN);
+        }
+
+        // ★ Header 标题：去掉前缀字母（D Combat → Combat），直接显示分类全名
+        NovolineFonts.thin(20).drawString(categoryName(selectedCategory), x + 50, y + 7, TEXT, false);
+        int modCount = getDisplayModules().size();
+        String countStr = modCount + " modules";
+        NovolineFonts.thin(14).drawString(countStr,
+                x + 50 + NovolineFonts.thin(20).stringWidth(categoryName(selectedCategory)) + 10, y + 10, TEXT_DIM, false);
+
+        if (selectedModule != null) {
+            NovolineFonts.thin(20).drawString(selectedModule.getName() + " Settings", x + NAV_W + modulePanelW() + 15, y + 7, TEXT, false);
+        } else {
+            NovolineFonts.thin(16).drawCenteredString("S T A R S H A C K", x + NAV_W + modulePanelW() + settingsWidth / 2.0F, y + 7, TEXT_DIM);
+        }
+
+        if (inside(mx, my, right - 10, y + windowHeight - 10, 10, 10)) {
+            Gui.drawRect(right - 6, y + windowHeight - 2, right, y + windowHeight, accent());
+        }
     }
 
     @Override
@@ -711,6 +705,15 @@ public final class StarsClickGui extends ClickGui {
     }
 
     @Override
+    public void mouseReleased(int mx, int my, int state) {
+        if (state == 0) {
+            dragging = false;
+            resizing = false;
+            if (activeSetting instanceof SliderSetting || activeSetting instanceof ColorSetting) activeSetting = null;
+        }
+    }
+
+    @Override
     public void onGuiClosed() {
         dragging = false;
         resizing = false;
@@ -718,17 +721,6 @@ public final class StarsClickGui extends ClickGui {
         activeSetting = null;
         openCombo = null;
         super.onGuiClosed();
-    }
-
-    private void ensureKeyboardIndexVisible() {
-        float visibleH = windowHeight - HEADER_H - SEARCH_BAR_H;
-        float targetY = keyboardIndex * ROW_HEIGHT;
-        float scroll = moduleScroll.get(selectedCategory);
-        if (targetY < -scroll) {
-            moduleScroll.put(selectedCategory, -targetY);
-        } else if (targetY + ROW_HEIGHT > -scroll + visibleH) {
-            moduleScroll.put(selectedCategory, -(targetY + ROW_HEIGHT - visibleH));
-        }
     }
 
     @Override
@@ -741,6 +733,17 @@ public final class StarsClickGui extends ClickGui {
         }
         constrainWindow();
         if (selectedModule != null && !getDisplayModules().contains(selectedModule)) selectedModule = null;
+    }
+
+    private void ensureKeyboardIndexVisible() {
+        float visibleH = windowHeight - HEADER_H - SEARCH_BAR_H;
+        float targetY = keyboardIndex * ROW_HEIGHT;
+        float scroll = moduleScroll.get(selectedCategory);
+        if (targetY < -scroll) {
+            moduleScroll.put(selectedCategory, -targetY);
+        } else if (targetY + ROW_HEIGHT > -scroll + visibleH) {
+            moduleScroll.put(selectedCategory, -(targetY + ROW_HEIGHT - visibleH));
+        }
     }
 
     private void drawBlurBackground() {
@@ -784,31 +787,6 @@ public final class StarsClickGui extends ClickGui {
         GL11.glEnd();
     }
 
-    @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        mc.getFramebuffer().bindFramebuffer(false);
-        drawBlurBackground();
-        ScaledResolution res = new ScaledResolution(this.mc);
-        double scale = width <= 0 ? 1.0D : res.getScaledWidth() / (double) width;
-        int lx = (int) Math.floor(mouseX / scale), ly = (int) Math.floor(mouseY / scale);
-        updateWindowDrag(lx, ly);
-
-        if (categoryFadeAlpha < 1F) {
-            categoryFadeAlpha = Math.min(1F, categoryFadeAlpha + 0.08F);
-            categoryOffsetY *= 0.85F;
-            if (Math.abs(categoryOffsetY) < 0.5F) categoryOffsetY = 0F;
-        }
-
-        GlStateManager.pushMatrix();
-        GlStateManager.scale(scale, scale, 1.0D);
-        drawWindow(lx, ly);
-        drawTabs(lx, ly);
-        drawModules(lx, ly);
-        drawSettings(lx, ly);
-        GlStateManager.popMatrix();
-    }
-
-    // ★ 修复：去掉四角圆点，改为纯直线矩形边框
     private void drawRoundedOutline(float l, float t, float r, float b, float radius, int color) {
         Gui.drawRect((int) l, (int) t, (int) r, (int) t + 1, color);
         Gui.drawRect((int) l, (int) (b - 1), (int) r, (int) b, color);
@@ -833,6 +811,30 @@ public final class StarsClickGui extends ClickGui {
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glDisable(GL11.GL_BLEND);
         GL11.glPopMatrix();
+    }
+
+    @Override
+    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        mc.getFramebuffer().bindFramebuffer(false);
+        drawBlurBackground();
+        ScaledResolution res = new ScaledResolution(this.mc);
+        double scale = width <= 0 ? 1.0D : res.getScaledWidth() / (double) width;
+        int lx = (int) Math.floor(mouseX / scale), ly = (int) Math.floor(mouseY / scale);
+        updateWindowDrag(lx, ly);
+
+        if (categoryFadeAlpha < 1F) {
+            categoryFadeAlpha = Math.min(1F, categoryFadeAlpha + 0.08F);
+            categoryOffsetY *= 0.85F;
+            if (Math.abs(categoryOffsetY) < 0.5F) categoryOffsetY = 0F;
+        }
+
+        GlStateManager.pushMatrix();
+        GlStateManager.scale(scale, scale, 1.0D);
+        drawWindow(lx, ly);
+        drawTabs(lx, ly);
+        drawModules(lx, ly);
+        drawSettings(lx, ly);
+        GlStateManager.popMatrix();
     }
 
     @Override
