@@ -36,11 +36,11 @@ loom {
     }
     forge {
         pack200Provider.set(dev.architectury.pack200.java.Pack200Adapter())
-        mixinConfig("mixins.raven.json")
+        mixinConfig("mixins.stars.json")
     }
 
     mixin {
-        defaultRefmapName.set("mixins.raven.refmap.json")
+        defaultRefmapName.set("mixins.stars.refmap.json")
     }
 }
 
@@ -87,7 +87,7 @@ tasks.withType(org.gradle.jvm.tasks.Jar::class) {
         this["ForceLoadAsMod"] = "true"
 
         this["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
-        this["MixinConfigs"] = "mixins.raven.json"
+        this["MixinConfigs"] = "mixins.stars.json"
     }
 }
 
@@ -97,7 +97,7 @@ tasks.processResources {
     inputs.property("modid", modid)
     inputs.property("basePackage", baseGroup)
 
-    filesMatching(listOf("mcmod.info", "mixins.raven.json")) {
+    filesMatching(listOf("mcmod.info", "mixins.stars.json")) {
         expand(inputs.properties)
     }
 

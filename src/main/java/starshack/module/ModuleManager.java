@@ -45,6 +45,7 @@ public class ModuleManager {
     public static NoSlow noSlow;
     public static KillAura killAura;
     public static AutoClicker autoClicker;
+    public static NewAutoClicker newAutoClicker;     // ★ LiquidBounce 风格连点器
     public static VapeAutoClicker vapeAutoClicker;   // ★ Vape V4 风格连点器
     public static KnockbackDelay knockbackDelay;
     public static HitBox hitBox;
@@ -117,9 +118,8 @@ public class ModuleManager {
         this.addModule(new TPAura());
         this.addModule(velocity = new Velocity());
         this.addModule(wTap = new WTap());
-
-        // ★ Vape V4 风格 AutoClicker（与上方 Novoline 版 AutoClicker 并存，互不影响）
         this.addModule(vapeAutoClicker = new VapeAutoClicker());
+        this.addModule(newAutoClicker = new NewAutoClicker());
 
         this.addModule(new ExtraBobbing());
         this.addModule(new FlameTrail());
