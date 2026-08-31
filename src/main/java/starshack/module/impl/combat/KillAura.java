@@ -1,18 +1,36 @@
 package starshack.module.impl.combat;
 
+import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityCreature;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityArmorStand;
+import net.minecraft.entity.monster.EntityGiantZombie;
+import net.minecraft.entity.monster.EntityIronGolem;
+import net.minecraft.entity.monster.EntityPigZombie;
+import net.minecraft.entity.monster.EntitySilverfish;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemSword;
+import net.minecraft.network.play.client.C02PacketUseEntity;
+import net.minecraft.network.play.client.C07PacketPlayerDigging;
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
+import net.minecraft.network.play.client.C09PacketHeldItemChange;
+import net.minecraft.util.*;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.lwjgl.input.Mouse;
 import starshack.Stars;
-import starshack.event.AttackEvent;
-import starshack.event.ClientRotationEvent;
-import starshack.event.PrePlayerInteractEvent;
-import starshack.event.RightClickMouseEvent;
-import starshack.event.SendPacketEvent;
-import starshack.event.UseItemEvent;
+import starshack.event.*;
 import starshack.helper.RotationHelper;
 import starshack.lag.api.EnumLagDirection;
 import starshack.lag.api.LagRequest;
 import starshack.lag.timeout.ModuleBackedTimeout;
-import starshack.mixin.impl.accessor.IAccessorPlayerControllerMP;
 import starshack.mixin.impl.accessor.IAccessorEntityRenderer;
+import starshack.mixin.impl.accessor.IAccessorPlayerControllerMP;
 import starshack.module.Module;
 import starshack.module.ModuleManager;
 import starshack.module.impl.minigames.SkyWars;
@@ -24,73 +42,57 @@ import starshack.utility.CombatTargeting;
 import starshack.utility.ReflectionUtils;
 import starshack.utility.RotationUtils;
 import starshack.utility.Utils;
-import net.minecraft.client.renderer.EntityRenderer;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityCreature;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.item.EntityArmorStand;
-import net.minecraft.entity.monster.EntityGiantZombie;
-import net.minecraft.entity.monster.EntityIronGolem;
-import net.minecraft.entity.monster.EntityPigZombie;
-import net.minecraft.entity.monster.EntitySilverfish;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.network.play.client.C02PacketUseEntity;
-import net.minecraft.network.play.client.C07PacketPlayerDigging;
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
-import net.minecraft.network.play.client.C09PacketHeldItemChange;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemSword;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
-import net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import org.lwjgl.input.Mouse;
 
 import java.util.*;
 
 public class KillAura extends Module {
-    private SliderSetting mode;
-    private SliderSetting minCPS;
-    private SliderSetting maxCPS;
-    private SliderSetting fov;
-    private SliderSetting attackRange;
-    private SliderSetting swingRange;
-    private SliderSetting aimRange;
+    private final SliderSetting mode;
+    private final SliderSetting minCPS;
+    private final SliderSetting maxCPS;
+    private final SliderSetting fov;
+    private final SliderSetting attackRange;
+    private final SliderSetting swingRange;
+    private final SliderSetting aimRange;
     public SliderSetting rotationMode;
-    private SliderSetting speed;
-    private SliderSetting sortMode;
-    private SliderSetting switchDelay;
-    private ButtonSetting attackMobs;
-    private ButtonSetting targetInvis;
-    private ButtonSetting disableInInventory;
-    private ButtonSetting disableWhileMining;
-    private ButtonSetting aimThroughBlocks;
-    private ButtonSetting aimThroughEntities;
-    private ButtonSetting ignoreTeammates;
-    private ButtonSetting prioritizeEnemies;
-    private ButtonSetting notUsingItem;
-    private ButtonSetting requireMouseDown;
-    private ButtonSetting weaponOnly;
+    private final SliderSetting speed;
+    private final SliderSetting sortMode;
+    private final SliderSetting switchDelay;
+    private final ButtonSetting attackMobs;
+    private final ButtonSetting targetInvis;
+    private final ButtonSetting disableInInventory;
+    private final ButtonSetting disableWhileMining;
+    private final ButtonSetting aimThroughBlocks;
+    private final ButtonSetting aimThroughEntities;
+    private final ButtonSetting ignoreTeammates;
+    private final ButtonSetting prioritizeEnemies;
+    private final ButtonSetting notUsingItem;
+    private final ButtonSetting requireMouseDown;
+    private final ButtonSetting weaponOnly;
 
-    private GroupSetting autoBlockGroup;
-    private ButtonSetting autoBlockEnabled;
-    private SliderSetting autoBlockMode;
-    private SliderSetting autoBlockRange;
-    private SliderSetting autoBlockMinAps;
-    private SliderSetting autoBlockMaxAps;
-    private ButtonSetting autoBlockRequirePress;
-    private ButtonSetting autoBlockIgnoreTeammates;
+    private final GroupSetting autoBlockGroup;
+    private final ButtonSetting autoBlockEnabled;
+    private final SliderSetting autoBlockMode;
+    private final SliderSetting autoBlockRange;
+    private final SliderSetting autoBlockMinAps;
+    private final SliderSetting autoBlockMaxAps;
+    private final ButtonSetting autoBlockRequirePress;
+    private final ButtonSetting autoBlockIgnoreTeammates;
+
+    // ===== Combat Patch (Predict / KeepSprint / RandomCenter / InstantRotation) =====
+    private final GroupSetting combatPatchGroup;
+    private final ButtonSetting instantRotation;
+    private final ButtonSetting keepSprint;
+    private final ButtonSetting predictEnabled;
+    private final SliderSetting predictMin;
+    private final SliderSetting predictMax;
+    private final ButtonSetting randomCenterEnabled;
+    private final SliderSetting randomCenterAmount;
+    private Random rand2;
 
     private final String[] modes = new String[]{"Single", "Switch"};
     private final String[] rotationModes = new String[]{"Silent", "Lock view", "None"};
-    private String[] sortModes = new String[]{"Distance", "Health", "Hurt time", "Yaw"};
-    private String[] autoBlockModes = new String[]{"Vanilla", "Spoof", "Hypixel", "Blink", "Interact", "Swap", "Legit", "Fake", "WatchDog"};
+    private final String[] sortModes = new String[]{"Distance", "Health", "Hurt time", "Yaw"};
+    private final String[] autoBlockModes = new String[]{"Vanilla", "Spoof", "Hypixel", "Blink", "Interact", "Swap", "Legit", "Fake", "WatchDog"};
 
     public static EntityLivingBase target;
     public static EntityLivingBase attackingEntity;
@@ -99,8 +101,8 @@ public class KillAura extends Module {
         return requireMouseDown.isToggled();
     }
 
-    private List<Entity> hostileMobs = new ArrayList<>();
-    private Map<Integer, Boolean> golems = new HashMap<>();
+    private final List<Entity> hostileMobs = new ArrayList<>();
+    private final Map<Integer, Boolean> golems = new HashMap<>();
 
     private long nextClickTime;
     private long lastTargetSwitch;
@@ -155,6 +157,16 @@ public class KillAura extends Module {
         this.registerSetting(autoBlockMaxAps = new SliderSetting(autoBlockGroup, "Maximum APS", 10.0, 1.0, 20.0, 1.0));
         this.registerSetting(autoBlockRange = new SliderSetting(autoBlockGroup, "Range", 6.0, 3.0, 8.0, 0.1));
         this.registerSetting(autoBlockIgnoreTeammates = new ButtonSetting(autoBlockGroup, "Ignore teammates for blocking", true));
+
+        // ===== Combat Patch settings =====
+        this.registerSetting(combatPatchGroup = new GroupSetting("Combat Patch"));
+        this.registerSetting(instantRotation = new ButtonSetting(combatPatchGroup, "Instant rotation", false));
+        this.registerSetting(keepSprint = new ButtonSetting(combatPatchGroup, "Keep sprint", true));
+        this.registerSetting(predictEnabled = new ButtonSetting(combatPatchGroup, "Predict", true));
+        this.registerSetting(predictMin = new SliderSetting(combatPatchGroup, "Predict min", 1.0, 0.0, 3.0, 0.1));
+        this.registerSetting(predictMax = new SliderSetting(combatPatchGroup, "Predict max", 1.5, 0.0, 3.0, 0.1));
+        this.registerSetting(randomCenterEnabled = new ButtonSetting(combatPatchGroup, "Random center", true));
+        this.registerSetting(randomCenterAmount = new SliderSetting(combatPatchGroup, "Random amount", 0.25, 0.0, 1.0, 0.05));
     }
 
     @Override
@@ -165,6 +177,7 @@ public class KillAura extends Module {
     @Override
     public void onEnable() {
         rand = new Random();
+        rand2 = new Random();
         nextClickTime = 0L;
         lastTargetSwitch = 0L;
         switchIndex = 0;
@@ -204,8 +217,24 @@ public class KillAura extends Module {
                 boolean useBackup = !aimThroughBlocks.isToggled() || !aimThroughEntities.isToggled();
                 float[] rot = RotationHelper.get().getRotationsToTarget(target, e, speedVal, 100, 100, 0f, useBackup, aimRangeVal, aimThroughBlocks.isToggled(), aimThroughEntities.isToggled());
                 if (rot != null) {
-                    attackYaw = rot[0];
-                    attackPitch = rot[1];
+                    if (predictEnabled != null && predictEnabled.isToggled() && target != null) {
+                        float pMin = (float) predictMin.getInput();
+                        float pMax = (float) predictMax.getInput();
+                        float predictSize = pMin + (rand2 != null ? rand2 : new Random()).nextFloat()
+                                * Math.max(0f, (pMax - pMin));
+                        double px = target.posX + target.motionX * predictSize;
+                        double py = target.posY + target.motionY * predictSize;
+                        double pz = target.posZ + target.motionZ * predictSize;
+                        double dx = px - mc.thePlayer.posX;
+                        double dy = (py + target.getEyeHeight() * 0.5) - (mc.thePlayer.posY + mc.thePlayer.getEyeHeight());
+                        double dz = pz - mc.thePlayer.posZ;
+                        double dist = Math.sqrt(dx * dx + dz * dz);
+                        attackYaw = (float) (Math.atan2(dz, dx) * 180.0 / Math.PI) - 90.0f;
+                        attackPitch = (float) -(Math.atan2(dy, dist) * 180.0 / Math.PI);
+                    } else {
+                        attackYaw = rot[0];
+                        attackPitch = rot[1];
+                    }
                     if (rotationMode.getInput() == 0) {
                         e.yaw = attackYaw;
                         e.pitch = attackPitch;
@@ -260,8 +289,27 @@ public class KillAura extends Module {
             if (targetDistance > attackRange.getInput() || !isRotationOnTarget(target, attackYaw, attackPitch)) return;
 
             prepareAutoBlockAttack(target);
+
+            if (instantRotation != null && instantRotation.isToggled() && target != null) {
+                float[] snapRot = RotationUtils.getRotations(target,
+                        mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch);
+                if (snapRot != null) {
+                    mc.thePlayer.rotationYaw = snapRot[0];
+                    mc.thePlayer.rotationPitch = snapRot[1];
+                    mc.thePlayer.prevRotationYaw = snapRot[0];
+                    mc.thePlayer.prevRotationPitch = snapRot[1];
+                    RotationUtils.serverRotations[0] = snapRot[0];
+                    RotationUtils.serverRotations[1] = snapRot[1];
+                    RotationHelper.get().setRotations(snapRot[0], snapRot[1]);
+                }
+            }
+
             mc.playerController.attackEntity(mc.thePlayer, target);
             hitRegistered = true;
+
+            if (keepSprint != null && keepSprint.isToggled() && mc.thePlayer.isSprinting()) {
+                mc.thePlayer.setSprinting(true);
+            }
             if (isHypixelWithoutNoSlow(getAutoBlockMode())) {
                 hypixelInteractionTarget = target;
             }
@@ -616,7 +664,7 @@ public class KillAura extends Module {
             }
             hostileMobs.add(e.entity);
         }
-        if (e.target == null && hostileMobs.contains(e.entity)) {
+        if (e.target == null) {
             hostileMobs.remove(e.entity);
         }
     }
@@ -806,6 +854,15 @@ public class KillAura extends Module {
         if (!box.isVecInside(eyes) && intercept == null) return false;
 
         Vec3 hitVec = intercept == null ? eyes : intercept.hitVec;
+        if (randomCenterEnabled != null && randomCenterEnabled.isToggled() && rand2 != null) {
+            double a = randomCenterAmount != null ? randomCenterAmount.getInput() : 0.25;
+            double halfW = (entity.getEntityBoundingBox().maxX - entity.getEntityBoundingBox().minX) * 0.5;
+            double halfH = (entity.getEntityBoundingBox().maxY - entity.getEntityBoundingBox().minY) * 0.5;
+            hitVec = new Vec3(
+                    hitVec.xCoord + (rand2.nextDouble() - 0.5) * 2.0 * a * Math.max(0.2, halfW),
+                    hitVec.yCoord + (rand2.nextDouble() - 0.5) * 2.0 * a * Math.max(0.2, halfH),
+                    hitVec.zCoord + (rand2.nextDouble() - 0.5) * 2.0 * a * Math.max(0.2, halfW));
+        }
         if (!aimThroughBlocks.isToggled()) {
             MovingObjectPosition blockHit = mc.theWorld.rayTraceBlocks(eyes, hitVec, false, false, true);
             if (blockHit != null && blockHit.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) return false;
@@ -878,10 +935,7 @@ public class KillAura extends Module {
             return false;
         } else if (disableWhileMining.isToggled() && Utils.isMining()) {
             return false;
-        } else if (disableInInventory.isToggled() && mc.currentScreen != null) {
-            return false;
-        }
-        return true;
+        } else return !disableInInventory.isToggled() || mc.currentScreen == null;
     }
 
     private long nextDelay() {

@@ -1,9 +1,5 @@
 package starshack.module.impl.render;
 
-import starshack.module.Module;
-import starshack.module.ModuleManager;
-import starshack.module.impl.combat.KillAura;
-import starshack.utility.font.RavenFontRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
@@ -15,8 +11,12 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.EnumChatFormatting;
 import org.lwjgl.opengl.GL11;
+import starshack.module.Module;
+import starshack.module.ModuleManager;
+import starshack.module.impl.combat.KillAura;
+import starshack.utility.font.RavenFontRenderer;
 
-import java.awt.Color;
+import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -163,7 +163,7 @@ final class NovolineHudRenderer {
     }
 
     private static void drawUserInfo(ScaledResolution resolution) {
-        String info = EnumChatFormatting.GRAY + "Build - " + EnumChatFormatting.WHITE + "#081326"
+        String info = EnumChatFormatting.GRAY + "Build - " + EnumChatFormatting.WHITE + "#26831"
                 + EnumChatFormatting.GRAY + " | UID - " + EnumChatFormatting.WHITE + MC.thePlayer.getName();
         draw(info, resolution.getScaledWidth() - width(info) - 2, resolution.getScaledHeight() - height() - 2, 0xFFFFFFFF, true);
     }

@@ -1,22 +1,6 @@
 package starshack.command;
 
-import starshack.command.impl.Bind;
-import starshack.command.impl.Binds;
-import starshack.command.impl.Cname;
-import starshack.command.impl.Debug;
-import starshack.command.impl.Enemy;
-import starshack.command.impl.Friend;
-import starshack.command.impl.Help;
-import starshack.command.impl.HideAll;
-import starshack.command.impl.IRCCommand;
-import starshack.command.impl.Name;
-import starshack.command.impl.Ping;
-import starshack.command.impl.Prefix;
-import starshack.command.impl.Profiles;
-import starshack.command.impl.ShowAll;
-import starshack.command.impl.Toggle;
-import starshack.command.impl.Track;
-import starshack.command.impl.Unbind;
+import starshack.command.impl.*;
 import starshack.utility.Utils;
 
 import java.util.ArrayList;
@@ -28,7 +12,7 @@ import java.util.List;
  * Client chat-command registry and dispatcher, based on Suzuran's command flow.
  */
 public class CommandManager {
-    public static final String DEFAULT_PREFIX = ".";
+    public static final String DEFAULT_PREFIX = ";";
 
     private final List<Command> commands = new ArrayList<>();
     private String[] latestAutoComplete = new String[0];
