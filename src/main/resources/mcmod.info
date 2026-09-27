@@ -1,0 +1,17 @@
+[
+  {
+    "modid": "starshack",
+    "name": "StarShack",
+    "description": "A customizable ClickGUI client for Minecraft 1.8.9. Features a modern flat-design ClickGUI with search, tooltips, keybinds and a star-themed visual identity.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "https://github.com/vliantwo/starshack",
+    "updateUrl": "",
+    "authorList": ["vliantwo"],
+    "credits": "vliantwo",
+    "logoFile": "assets/starshack/textures/gui/stars.png",
+    "screenshots": [],
+    "parent": "",
+    "dependencies": []
+  }
+]

@@ -1,0 +1,6 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Keep launcher line endings platform-correct so ./gradlew works on a fresh clone
+*.bat text eol=crlf
+gradlew text eol=lf

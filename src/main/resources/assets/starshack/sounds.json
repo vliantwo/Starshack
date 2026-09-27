@@ -1,0 +1,14 @@
+{
+  "ui.toggle_on": {
+    "category": "master",
+    "sounds": [
+      "ui/sound_buttons_hanabi2_on"
+    ]
+  },
+  "ui.toggle_off": {
+    "category": "master",
+    "sounds": [
+      "ui/sound_buttons_hanabi2_off"
+    ]
+  }
+}
