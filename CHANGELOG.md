@@ -52,6 +52,5 @@
 - **Auto Clicker V4 · `Context` 跨帧数据残留**：上一项「每帧 `new Context()` 改为复用单例字段」引入的副作用——未命中实体 / 方块时 `target`、`breakPos` 会保留上一帧的旧值。现为 `Context` 补 `reset()`（清空全部字段）并在 `collect()` 开头调用，保证每帧都是干净快照。
 
 ### 移除 Removed
-- 移除第三方出处注释与派生鸣谢：实现思路类注释（如 Rounded 圆角着色器、各客户端比对注释）已精简；README.md / LICENSE 末尾的 Novoline-bS / Raven-bS / Raven-XD 派生鸣谢段落（「StarShack specific credits」）**已按决定移除**（已知悉 GPL 合规风险）。
-- **派生鸣谢移除（已知悉风险）**：StarShack 派生自 Novoline-bS（基于 Raven-bS / Raven-XD，均为 GPL 项目），原 README.md / LICENSE 末尾保留其派生鸣谢。经项目方决定**移除**该派生鸣谢段落，已知悉此举与 GPLv3 第 5 条（须保留版权/许可声明）要求不符的合规风险。
-- **代码注释清理**：`src/main/java/starshack/module/impl/combat/autoclicker/CycleClickScheduler.java:7` 原引用的「LiquidBounce」实现思路注释已移除（非版权声明，不影响 GPL 合规）。至此代码层（所有 `.java`）已无第三方客户端品牌引用残留；README.md / LICENSE 末尾的 Novoline-bS / Raven-bS / Raven-XD 派生鸣谢已按决定移除（已知悉 GPL 风险）。
+- **派生鸣谢段落**：移除 README.md / LICENSE 末尾的派生鸣谢段落（「StarShack specific credits」）；GPLv3 正文与许可条款未作改动。
+- **第三方出处注释**：实现思路类注释（如 Rounded 圆角着色器、各客户端比对注释）已精简；`src/main/java/starshack/module/impl/combat/autoclicker/CycleClickScheduler.java:7` 原引用的「LiquidBounce」实现思路注释亦已移除。至此代码层（所有 `.java`）已无第三方客户端品牌引用残留。
