@@ -14,7 +14,7 @@
   - 支持显示名**首字母缩写**前缀匹配（如 `Kill Aura`→`ka`、`ChestESP`→`ce`）。
 - **Auto Clicker V4**：
   - 接上原生的 ghost click 输入（Windows `SendInput`，JNA 经由游戏自带 launchwrapper 提供），非 Windows / JNA 不可用时自动降级为反射模拟。
-  - 新增周期点击调度（LiquidBounce 思路）：预生成约 1 秒周期内的点击序列并锁定平均 CPS，节奏更稳。
+  - 新增周期点击调度：预生成约 1 秒周期内的点击序列并锁定平均 CPS，节奏更稳。
   - 新增「Cycle scheduling」开关（默认开启），关闭后回退为逐次独立随机延迟。
 
 ### 变更 Changed
@@ -53,4 +53,4 @@
 
 ### 移除 Removed
 - **派生鸣谢段落**：移除 README.md / LICENSE 末尾的派生鸣谢段落（「StarShack specific credits」）；GPLv3 正文与许可条款未作改动。
-- **第三方出处注释**：实现思路类注释（如 Rounded 圆角着色器、各客户端比对注释）已精简；`src/main/java/starshack/module/impl/combat/autoclicker/CycleClickScheduler.java:7` 原引用的「LiquidBounce」实现思路注释亦已移除。至此代码层（所有 `.java`）已无第三方客户端品牌引用残留。
+- **第三方出处注释**：实现思路类注释（如 Rounded 圆角着色器、各客户端比对注释）已精简；`src/main/java/starshack/module/impl/combat/autoclicker/CycleClickScheduler.java:7` 原引用的第三方实现思路注释亦已移除。至此代码层（所有 `.java`）已无第三方客户端品牌引用残留。
