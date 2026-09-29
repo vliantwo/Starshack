@@ -60,7 +60,7 @@ public class ButtonComponent extends Component {
     }
 
     public boolean onClick(int x, int y, int b) {
-        if (this.i(x, y) && b == 0 && this.moduleComponent.isOpened && this.moduleComponent.isVisible(this)) {
+        if (this.isHovered(x, y) && b == 0 && this.moduleComponent.isOpened && this.moduleComponent.isVisible(this)) {
             if (this.buttonSetting.isMethodButton) {
                 this.buttonSetting.runMethod();
                 return false;
@@ -74,7 +74,7 @@ public class ButtonComponent extends Component {
         return false;
     }
 
-    public boolean i(int x, int y) {
+    public boolean isHovered(int x, int y) {
         return x > this.x && x < this.x + this.moduleComponent.categoryComponent.getWidth() && y > this.y && y < this.y + 11;
     }
 }

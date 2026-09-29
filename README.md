@@ -6,7 +6,7 @@
 
 <p align="center">
   <b>A modern, privacy-first Minecraft utility mod for 1.8.9 (Forge)</b><br>
-  <i>Configuration-persistent · Extensible · Built on Novoline-bS / Raven-bS foundations</i>
+  <i>Configuration-persistent · Extensible</i>
 </p>
 
 <p align="center">
@@ -143,25 +143,11 @@ See the full license text in [LICENSE](LICENSE).
 
 ## 🙏 Credits & Acknowledgements
 
-StarShack is built upon the foundations laid by the **Raven-bS / Novoline-bS**
-family of Minecraft utility mods. Huge thanks to the original developers:
-
-- **[Novoline-bS](https://github.com/Ij1chi-Nijika/Novoline-bS)**
-  by [Ij1chi-Nijika](https://github.com/Ij1chi-Nijika) — the base this project was forked from. Much of the module and
-  setting architecture, ClickGUI, and Mixin work originates here.
-
-- **Raven-bS / Raven-XD** — the original "Raven" lineage that Novoline-bS itself extended. Core concepts (esp, aura,
-  scaffolds, etc.) trace back to this community.
-
-- **[LiquidBounce](https://github.com/CCBlueX/LiquidBounce)** — an inspiration for clean module architecture and
-  scripting design.
-
 - **Minecraft Forge / ForgeGradle** — the modding framework this project builds on top of.
 
 - **SpongePowered Mixin** — the bytecode transformation library used for runtime patches.
 
-This project **inherits the GPLv3 license** from its predecessors and **preserves all applicable copyright notices**. If
-you believe any attribution is missing, please open an issue and it will be corrected promptly.
+StarShack is distributed under the GNU General Public License v3.
 
 ---
 
@@ -670,24 +656,3 @@ The GNU General Public License does not permit incorporating your program into p
 a software library, you may consider it more useful to permit linking proprietary applications with the library. If this
 is what you want to do, use the GNU Lesser General Public License instead of this License. But first, please
 read <https://www.gnu.org/licenses/why-not-lgpl.html>.
-
-============================================================================
-
-Credits & Acknowledgements (StarShack specific)
-
-StarShack is derived from Novoline-bS, which itself is based on the Raven-bS / Raven-XD lineage of Minecraft utility
-mods. Accordingly, this distribution includes and builds upon code originally authored by the Novoline-bS and Raven-bS
-developers. Their contributions are gratefully acknowledged:
-
-- Novoline-bS (https://github.com/Ij1chi-Nijika/Novoline-bS) by Ij1chi-Nijika — the direct base of this project. Much of
-  the module/setting architecture, ClickGUI, and Mixin work originates here.
-
-- Raven-bS / Raven-XD — the original "Raven" lineage from which Novoline-bS itself was extended. Core concepts (ESP,
-  Aura, Scaffold, etc.) trace back to this community.
-
-This acknowledgment is provided in accordance with the spirit of the GPL, and the original copyright notices and license
-terms are preserved in the source where applicable.
-
-============================================================================
-
-            END OF LICENSE FILE

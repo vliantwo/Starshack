@@ -454,7 +454,7 @@ public class Utils implements IMinecraftInstance {
 
     public static boolean inFov(Entity viewPoint, float fov, final double posX, final double posZ) {
         fov *= 0.5;
-        final double wrapAngleTo180_double = MathHelper.wrapAngleTo180_double((viewPoint.rotationYaw - RotationUtils.angle(posX, posZ)) % 360.0f);
+        final double wrapAngleTo180_double = MathHelper.wrapAngleTo180_double((viewPoint.rotationYaw - RotationUtils.getYawTowards(posX, posZ)) % 360.0f);
         if (wrapAngleTo180_double > 0.0) {
             return wrapAngleTo180_double < fov;
         } else return wrapAngleTo180_double > -fov;
@@ -729,8 +729,8 @@ public class Utils implements IMinecraftInstance {
         return round(hitsToKill, 1);
     }
 
-    public static float n() {
-        return ae(mc.thePlayer.rotationYaw, mc.thePlayer.movementInput.moveForward, mc.thePlayer.movementInput.moveStrafe);
+    public static float getPlayerMovementYaw() {
+        return getMovementYawRadians(mc.thePlayer.rotationYaw, mc.thePlayer.movementInput.moveForward, mc.thePlayer.movementInput.moveStrafe);
     }
 
     public static String extractFileName(String name) {
@@ -809,7 +809,7 @@ public class Utils implements IMinecraftInstance {
             mc.thePlayer.motionX = 0.0;
             return;
         }
-        float n3 = n();
+        float n3 = getPlayerMovementYaw();
         mc.thePlayer.motionX = -Math.sin(n3) * n;
         mc.thePlayer.motionZ = Math.cos(n3) * n;
     }
@@ -1110,20 +1110,20 @@ public class Utils implements IMinecraftInstance {
         return yw;
     }
 
-    public static float ae(float n, float n2, float n3) {
-        float n4 = 1.0f;
-        if (n2 < 0.0f) {
-            n += 180.0f;
-            n4 = -0.5f;
-        } else if (n2 > 0.0f) {
-            n4 = 0.5f;
+    public static float getMovementYawRadians(float yaw, float forward, float strafe) {
+        float direction = 1.0f;
+        if (forward < 0.0f) {
+            yaw += 180.0f;
+            direction = -0.5f;
+        } else if (forward > 0.0f) {
+            direction = 0.5f;
         }
-        if (n3 > 0.0f) {
-            n -= 90.0f * n4;
-        } else if (n3 < 0.0f) {
-            n += 90.0f * n4;
+        if (strafe > 0.0f) {
+            yaw -= 90.0f * direction;
+        } else if (strafe < 0.0f) {
+            yaw += 90.0f * direction;
         }
-        return n * 0.017453292f;
+        return yaw * 0.017453292f;
     }
 
     public static double getHorizontalSpeed() {
@@ -1274,7 +1274,7 @@ public class Utils implements IMinecraftInstance {
         if (ModuleManager.autoClicker != null && ModuleManager.autoClicker.isEnabled()) {
             return Mouse.isButtonDown(0);
         } else {
-            return MouseHelper.f() > 1 && System.currentTimeMillis() - MouseHelper.LL < 300L;
+            return MouseHelper.getLeftCps() > 1 && System.currentTimeMillis() - MouseHelper.LL < 300L;
         }
     }
 

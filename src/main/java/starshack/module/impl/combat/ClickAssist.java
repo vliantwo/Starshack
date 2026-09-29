@@ -104,7 +104,7 @@ public class ClickAssist extends Module {
                             }
                         }
 
-                        if (aboveCPS.isToggled() && MouseHelper.i() <= 5) {
+                        if (aboveCPS.isToggled() && MouseHelper.getRightCps() <= 5) {
                             this.fix(1);
                             return;
                         }

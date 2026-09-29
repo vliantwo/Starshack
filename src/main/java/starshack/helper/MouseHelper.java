@@ -91,12 +91,12 @@ public class MouseHelper {
         b.add(LR = System.currentTimeMillis());
     }
 
-    public static int f() {
+    public static int getLeftCps() {
         a.removeIf(o -> o < System.currentTimeMillis() - 1000L);
         return a.size();
     }
 
-    public static int i() {
+    public static int getRightCps() {
         b.removeIf(o -> o < System.currentTimeMillis() - 1000L);
         return b.size();
     }

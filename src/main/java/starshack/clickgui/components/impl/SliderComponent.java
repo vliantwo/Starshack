@@ -184,7 +184,7 @@ public class SliderComponent extends Component {
 
     @Override
     public boolean onClick(int mouseX, int mouseY, int button) {
-        if ((u(mouseX, mouseY) || i(mouseX, mouseY)) && button == 0 && this.moduleComponent.isOpened && this.moduleComponent.isVisible(this)) {
+        if ((isInLeftHalf(mouseX, mouseY) || isInRightHalf(mouseX, mouseY)) && button == 0 && this.moduleComponent.isOpened && this.moduleComponent.isVisible(this)) {
             this.heldDown = true;
         }
         return false;
@@ -205,11 +205,11 @@ public class SliderComponent extends Component {
         }
     }
 
-    public boolean u(int mouseX, int mouseY) {
+    public boolean isInLeftHalf(int mouseX, int mouseY) {
         return mouseX > this.x && mouseX < this.x + this.moduleComponent.categoryComponent.getWidth() / 2 + 1 && mouseY > this.y && mouseY < this.y + 16;
     }
 
-    public boolean i(int mouseX, int mouseY) {
+    public boolean isInRightHalf(int mouseX, int mouseY) {
         return mouseX > this.x + this.moduleComponent.categoryComponent.getWidth() / 2 && mouseX < this.x + this.moduleComponent.categoryComponent.getWidth() && mouseY > this.y && mouseY < this.y + 16;
     }
 
