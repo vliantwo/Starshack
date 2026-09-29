@@ -6,7 +6,6 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.*;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -119,6 +118,7 @@ public class StarAutoClicker extends Module {
     // ================= 感知层 =================
     private Context collect() {
         Context ctx = context;
+        ctx.reset();
         ctx.leftDown = Mouse.isButtonDown(0);
         ctx.usingItem = mc.thePlayer.isUsingItem();
         ctx.inCreative = mc.thePlayer.capabilities.isCreativeMode;
@@ -314,17 +314,4 @@ public class StarAutoClicker extends Module {
         return held.getItem() instanceof ItemSword;
     }
 
-    // ============ 状态机 ============
-    private enum State {IDLE, AIMING, BURST, PAUSED}
-
-    // ================= 感知数据快照 =================
-    private static class Context {
-        boolean leftDown;
-        boolean usingItem;
-        boolean inCreative;
-        boolean inGame;
-        EntityLivingBase target;
-        BlockPos breakPos;
-        boolean canEdit;
-    }
 }

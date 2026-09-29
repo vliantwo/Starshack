@@ -1,10 +1,10 @@
 package starshack.module.impl.combat.autoclicker;
 
 /**
- * AutoClicker 状态机（精简版）。
+ * AutoClicker 状态机。
  * <p>
- * 优化点：移除原 StarAutoClicker 中定义但未使用的 AIMING / PAUSED，
- * 只保留两个真实生效的状态，符合最小状态机原则。
+ * 只保留两个真实生效的状态（历史上的 AIMING / PAUSED 从未被使用，已移除），
+ * 符合最小状态机原则；由同包的 StarAutoClicker 驱动。
  */
 public enum State {
     /**
