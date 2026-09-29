@@ -73,19 +73,17 @@ final class HudRenderer {
     }
 
     private static void drawArrayList(ScaledResolution resolution) {
-        List<Module> modules = new ArrayList<Module>();
+        List<HudEntry> entries = new ArrayList<HudEntry>();
+        int alpha = (int) HUD.starsBackgroundAlpha.getInput();
+        int background = new Color(0, 0, 0, alpha).getRGB();
         for (Module module : ModuleManager.modules) {
-            if (module.isEnabled() && module != ModuleManager.hud && !module.isHidden()) {
-                modules.add(module);
+            boolean hideVisual = HUD.hideVisualsFromList != null && HUD.hideVisualsFromList.isToggled()
+                    && module.moduleCategory() == Module.category.visuals;
+            if (module.isEnabled() && module != ModuleManager.hud && !module.isHidden() && !hideVisual) {
+                entries.add(new HudEntry(module));
             }
         }
-        for (Module module : modules) module.getInfoUpdate();
-        modules.sort(new Comparator<Module>() {
-            @Override
-            public int compare(Module a, Module b) {
-                return Integer.compare(width(moduleLabel(b)), width(moduleLabel(a)));
-            }
-        });
+        entries.sort(HudEntry.COMPARE_BY_WIDTH);
 
         float scale = scale();
         GL11.glPushMatrix();
@@ -94,15 +92,13 @@ final class HudRenderer {
         float xAnchor = HUD.posX / scale;
         float y = HUD.posY / scale;
         int row = 0;
-        for (Module module : modules) {
-            String text = moduleLabel(module);
-            int textWidth = width(text);
+        for (HudEntry entry : entries) {
+            int textWidth = entry.textWidth;
             int fontHeight = height();
             float x = screenWidth - textWidth - 4.0f;
             // A manually moved module list keeps its original horizontal anchor when it is not default.
             if (HUD.getRelativePosX() < 0.98f) x = xAnchor;
             int accent = arrayColor(row, 255);
-            int background = new Color(0, 0, 0, (int) HUD.starsBackgroundAlpha.getInput()).getRGB();
             int mode = (int) HUD.starsBackground.getInput();
             float top = y - (row == 0 ? 2 : 0);
             float right = x + textWidth + 4;
@@ -110,9 +106,9 @@ final class HudRenderer {
                 Gui.drawRect((int) (x - 3), (int) top, (int) (x - 2), (int) (y + fontHeight + 2), accent);
             if (mode != 1) Gui.drawRect((int) (x - 2), (int) top, (int) right, (int) (y + fontHeight + 2), background);
             if (mode == 3) Gui.drawRect((int) (right - 1), (int) top, (int) right, (int) (y + fontHeight + 2), accent);
-            if (mode == 0 && row == modules.size() - 1)
+            if (mode == 0 && row == entries.size() - 1)
                 Gui.drawRect((int) (x - 3), (int) (y + fontHeight + 1), (int) right, (int) (y + fontHeight + 2), accent);
-            draw(text, x, y + 1, accent, true);
+            draw(entry.label, x, y + 1, accent, true);
             y += fontHeight + 2;
             row++;
         }
@@ -232,6 +228,24 @@ final class HudRenderer {
             String distance = (int) MC.thePlayer.getDistanceToEntity(target) + "m";
             draw(target.getName(), x + 3, y + 3, 0xFFC8C8C8, false);
             draw(distance, x + width - width(distance) - 3, y + 3, 0xFFC8C8C8, false);
+        }
+    }
+
+    private static final class HudEntry {
+        static final Comparator<HudEntry> COMPARE_BY_WIDTH = new Comparator<HudEntry>() {
+            @Override
+            public int compare(HudEntry a, HudEntry b) {
+                return Integer.compare(b.textWidth, a.textWidth);
+            }
+        };
+
+        final String label;
+        final int textWidth;
+
+        HudEntry(Module module) {
+            module.getInfoUpdate();
+            this.label = moduleLabel(module);
+            this.textWidth = width(this.label);
         }
     }
 

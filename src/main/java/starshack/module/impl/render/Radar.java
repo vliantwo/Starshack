@@ -14,13 +14,29 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Radar extends Module {
     private ButtonSetting tracerLines;
 
     private int scale = 2;
+    private int playerIndicatorX;
+    private int playerIndicatorY;
 
     private static final int RECT_COLOR = new Color(0, 0, 0, 125).getRGB();
+
+    private static final class Blip {
+        final double x;
+        final double y;
+
+        Blip(double x, double y) {
+            this.x = x;
+            this.y = y;
+        }
+    }
+
+    private final List<Blip> blips = new ArrayList<>();
 
     public Radar() {
         super("Radar", category.visuals);
@@ -30,6 +46,25 @@ public class Radar extends Module {
     @Override
     public void onUpdate() {
         this.scale = new ScaledResolution(mc).getScaleFactor();
+        this.playerIndicatorX = 5 + 100 / 2 + 3;
+        this.playerIndicatorY = 70 + 52;
+        this.blips.clear();
+        if (!Utils.nullCheck() || mc.theWorld == null) {
+            return;
+        }
+        for (EntityPlayer player : mc.theWorld.playerEntities) {
+            if (player != mc.thePlayer && player.deathTime == 0 && !AntiBot.isBot(player)) {
+                double distanceSquared = player.getDistanceSqToEntity(mc.thePlayer);
+                if (distanceSquared > 360.0) {
+                    continue;
+                }
+                double playerAngle = (mc.thePlayer.rotationYaw + Math.atan2(player.posX - mc.thePlayer.posX, player.posZ - mc.thePlayer.posZ) * 57.295780181884766) % 360.0;
+                double scaledDistance = distanceSquared / 5.0;
+                double xOffset = scaledDistance * Math.sin(Math.toRadians(playerAngle));
+                double zOffset = scaledDistance * Math.cos(Math.toRadians(playerAngle));
+                this.blips.add(new Blip(xOffset, zOffset));
+            }
+        }
     }
 
     @SubscribeEvent
@@ -52,49 +87,33 @@ public class Radar extends Module {
         Gui.drawRect(x - 1, bottomY, rightX + 1, bottomY + 1, -1);
         Gui.drawRect(x - 1, y, x, bottomY, -1);
         Gui.drawRect(rightX, y, rightX + 1, bottomY, -1);
-        int playerIndicatorX = rightX / 2 + 3;
-        int playerIndicatorY = y + 52;
-        RenderUtils.drawPolygon(playerIndicatorX, playerIndicatorY, 5.0, 3, -1);
+        RenderUtils.drawPolygon(this.playerIndicatorX, this.playerIndicatorY, 5.0, 3, -1);
         GL11.glPushMatrix();
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
         GL11.glScissor(x * this.scale, mc.displayHeight - this.scale * 170, rightX * this.scale - this.scale * 5, this.scale * 100);
-        for (EntityPlayer player : mc.theWorld.playerEntities) {
-            if (player != mc.thePlayer && player.deathTime == 0) {
-                if (AntiBot.isBot(player)) {
-                    continue;
-                }
-                double distanceSquared = player.getDistanceSqToEntity(mc.thePlayer);
-                if (distanceSquared > 360.0) {
-                    continue;
-                }
-                double playerAngle = (mc.thePlayer.rotationYaw + Math.atan2(player.posX - mc.thePlayer.posX, player.posZ - mc.thePlayer.posZ) * 57.295780181884766) % 360.0;
-                double scaledDistance = distanceSquared / 5.0;
-                double xOffset = scaledDistance * Math.sin(Math.toRadians(playerAngle));
-                double zOffset = scaledDistance * Math.cos(Math.toRadians(playerAngle));
-                if (tracerLines.isToggled()) {
-                    GL11.glPushMatrix();
-                    GL11.glEnable(GL11.GL_BLEND);
-                    GL11.glEnable(GL11.GL_LINE_SMOOTH);
-                    GL11.glDisable(GL11.GL_DEPTH_TEST);
-                    GL11.glDisable(GL11.GL_TEXTURE_2D);
-                    GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-                    GL11.glEnable(GL11.GL_BLEND);
-                    GL11.glLineWidth(0.5f);
-                    GL11.glColor3d(1.0, 1.0, 1.0);
-                    GL11.glBegin(GL11.GL_LINES);
-                    GL11.glVertex2d(playerIndicatorX, playerIndicatorY);
-                    GL11.glVertex2d((double) playerIndicatorX - xOffset, (double) playerIndicatorY - zOffset);
-                    GL11.glEnd();
-                    GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-                    GL11.glDisable(GL11.GL_BLEND);
-                    GL11.glEnable(GL11.GL_TEXTURE_2D);
-                    GL11.glEnable(GL11.GL_DEPTH_TEST);
-                    GL11.glDisable(GL11.GL_LINE_SMOOTH);
-                    GL11.glDisable(GL11.GL_BLEND);
-                    GL11.glPopMatrix();
-                }
-                RenderUtils.drawPolygon((double) playerIndicatorX - xOffset, (double) playerIndicatorY - zOffset, 3.0, 4, Color.red.getRGB());
+        for (Blip blip : this.blips) {
+            if (tracerLines.isToggled()) {
+                GL11.glPushMatrix();
+                GL11.glEnable(GL11.GL_BLEND);
+                GL11.glEnable(GL11.GL_LINE_SMOOTH);
+                GL11.glDisable(GL11.GL_DEPTH_TEST);
+                GL11.glDisable(GL11.GL_TEXTURE_2D);
+                GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+                GL11.glLineWidth(0.5f);
+                GL11.glColor3d(1.0, 1.0, 1.0);
+                GL11.glBegin(GL11.GL_LINES);
+                GL11.glVertex2d(this.playerIndicatorX, this.playerIndicatorY);
+                GL11.glVertex2d((double) this.playerIndicatorX - blip.x, (double) this.playerIndicatorY - blip.y);
+                GL11.glEnd();
+                GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+                GL11.glDisable(GL11.GL_BLEND);
+                GL11.glEnable(GL11.GL_TEXTURE_2D);
+                GL11.glEnable(GL11.GL_DEPTH_TEST);
+                GL11.glDisable(GL11.GL_LINE_SMOOTH);
+                GL11.glDisable(GL11.GL_BLEND);
+                GL11.glPopMatrix();
             }
+            RenderUtils.drawPolygon((double) this.playerIndicatorX - blip.x, (double) this.playerIndicatorY - blip.y, 3.0, 4, Color.red.getRGB());
         }
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
         GL11.glPopMatrix();

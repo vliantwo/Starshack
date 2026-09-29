@@ -80,8 +80,13 @@ public class Blink extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeTimedInfo() {
         return String.valueOf(blinkTicks);
+    }
+
+    @Override
+    protected long cacheTtlMillis() {
+        return 100L;
     }
 
     @SubscribeEvent

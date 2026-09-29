@@ -61,6 +61,7 @@ public class HUD extends Module {
     public static SliderSetting starsBackgroundAlpha;
     public static SliderSetting starsScale;
     public static ButtonSetting starsModuleList;
+    public static ButtonSetting hideVisualsFromList;
     public static ButtonSetting starsUserInfo;
     public static ButtonSetting starsArmor;
     public static ButtonSetting starsPotions;
@@ -138,6 +139,7 @@ public class HUD extends Module {
         this.registerSetting(starsBackgroundAlpha = new SliderSetting("Background alpha", 50, 1, 255, 1));
         this.registerSetting(starsScale = new SliderSetting("HUD scale", 1.0, 0.4, 3.0, 0.1));
         this.registerSetting(starsModuleList = new ButtonSetting("Module list", true));
+        this.registerSetting(hideVisualsFromList = new ButtonSetting("Hide visuals", true));
         this.registerSetting(starsUserInfo = new ButtonSetting("User info", true));
         this.registerSetting(starsArmor = new ButtonSetting("Armor HUD", true));
         this.registerSetting(starsPotions = new ButtonSetting("Potion HUD", true));

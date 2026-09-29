@@ -45,7 +45,7 @@ public class Disabler extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeInfo() {
         return MODES[(int) mode.getInput()];
     }
 

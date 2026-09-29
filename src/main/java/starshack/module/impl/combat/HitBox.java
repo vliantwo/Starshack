@@ -43,7 +43,7 @@ public class HitBox extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeInfo() {
         return ((int) multiplier.getInput() == multiplier.getInput() ? (int) multiplier.getInput() + "" : multiplier.getInput()) + multiplier.getSuffix();
     }
 
@@ -71,11 +71,14 @@ public class HitBox extends Module {
 
     @SubscribeEvent
     public void onRenderWorld(RenderWorldLastEvent e) {
-        if (showHitbox.isToggled() && Utils.nullCheck()) {
-            for (Entity en : mc.theWorld.loadedEntityList) {
-                if (en != mc.thePlayer && en instanceof EntityLivingBase && ((EntityLivingBase) en).deathTime == 0 && !(en instanceof EntityArmorStand) && !en.isInvisible()) {
-                    this.rh(en, Color.WHITE);
-                }
+        if (!showHitbox.isToggled() || !Utils.nullCheck()) {
+            return;
+        }
+        double d = 64.0D;
+        List<Entity> nearby = mc.theWorld.getEntitiesWithinAABB(Entity.class, new AxisAlignedBB(mc.thePlayer.posX - d, mc.thePlayer.posY - d, mc.thePlayer.posZ - d, mc.thePlayer.posX + d, mc.thePlayer.posY + d, mc.thePlayer.posZ + d));
+        for (Entity en : nearby) {
+            if (en != mc.thePlayer && en instanceof EntityLivingBase && ((EntityLivingBase) en).deathTime == 0 && !(en instanceof EntityArmorStand) && !en.isInvisible()) {
+                this.rh(en, Color.WHITE);
             }
         }
     }
@@ -153,18 +156,18 @@ public class HitBox extends Module {
             float ex = (float) ((double) e.getCollisionBorderSize() * multiplier.getInput());
             AxisAlignedBB bbox = e.getEntityBoundingBox().expand((double) ex, (double) ex, (double) ex);
             AxisAlignedBB axis = new AxisAlignedBB(bbox.minX - e.posX + x, bbox.minY - e.posY + y, bbox.minZ - e.posZ + z, bbox.maxX - e.posX + x, bbox.maxY - e.posY + y, bbox.maxZ - e.posZ + z);
-            GL11.glBlendFunc(770, 771);
-            GL11.glEnable(3042);
-            GL11.glDisable(3553);
-            GL11.glDisable(2929);
+            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GL11.glEnable(GL11.GL_BLEND);
+            GL11.glDisable(GL11.GL_TEXTURE_2D);
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
             GL11.glDepthMask(false);
             GL11.glLineWidth(2.0F);
             GL11.glColor3d((double) c.getRed(), (double) c.getGreen(), (double) c.getBlue());
             RenderGlobal.drawSelectionBoundingBox(axis);
-            GL11.glEnable(3553);
-            GL11.glEnable(2929);
+            GL11.glEnable(GL11.GL_TEXTURE_2D);
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
             GL11.glDepthMask(true);
-            GL11.glDisable(3042);
+            GL11.glDisable(GL11.GL_BLEND);
         }
     }
 }

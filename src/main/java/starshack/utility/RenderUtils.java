@@ -78,11 +78,11 @@ public class RenderUtils implements IMinecraftInstance {
         double vy = mc.getRenderManager().viewerPosY;
         double vz = mc.getRenderManager().viewerPosZ;
         GL11.glPushMatrix();
-        GL11.glBlendFunc(770, 771);
-        glEnable(3042);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL11.GL_BLEND);
         GL11.glLineWidth(2.0f);
-        GL11.glDisable(3553);
-        GL11.glDisable(2929);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glDepthMask(false);
         float outlineA = (outlineColor >> 24 & 0xFF) / 255.0f;
         float outlineR = (outlineColor >> 16 & 0xFF) / 255.0f;
@@ -106,10 +106,10 @@ public class RenderUtils implements IMinecraftInstance {
             }
         }
         GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        glEnable(3553);
-        glEnable(2929);
+        glEnable(GL11.GL_TEXTURE_2D);
+        glEnable(GL11.GL_DEPTH_TEST);
         GL11.glDepthMask(true);
-        GL11.glDisable(3042);
+        GL11.glDisable(GL11.GL_BLEND);
         GL11.glPopMatrix();
     }
 
@@ -242,7 +242,7 @@ public class RenderUtils implements IMinecraftInstance {
         WorldRenderer worldrenderer = tessellator.getWorldRenderer();
         GlStateManager.enableBlend();
         GlStateManager.disableTexture2D();
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
         GlStateManager.color(f, f1, f2, f3);
         worldrenderer.begin(7, DefaultVertexFormats.POSITION);
         worldrenderer.pos(left, bottom, 0.0D).endVertex();
@@ -267,18 +267,18 @@ public class RenderUtils implements IMinecraftInstance {
         float r = (float) (color >> 16 & 255) / 255.0F;
         float g = (float) (color >> 8 & 255) / 255.0F;
         float b = (float) (color & 255) / 255.0F;
-        GL11.glBlendFunc(770, 771);
-        GL11.glEnable(3042);
-        GL11.glDisable(3553);
-        GL11.glDisable(2929);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glDepthMask(false);
         GL11.glLineWidth(2.0F);
         GL11.glColor4f(r, g, b, a);
         drawBoundingBox(axis, r, g, b, a);
-        GL11.glEnable(3553);
-        GL11.glEnable(2929);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glDepthMask(true);
-        GL11.glDisable(3042);
+        GL11.glDisable(GL11.GL_BLEND);
         GlStateManager.popMatrix();
     }
 
@@ -295,7 +295,7 @@ public class RenderUtils implements IMinecraftInstance {
         GL11.glPushMatrix();
         GL11.glColor4f(f6, f7, f8, f5);
         GL11.glLineWidth(lineWidth);
-        GL11.glBegin(1);
+        GL11.glBegin(GL11.GL_LINES);
         GL11.glVertex2d(x, y);
         GL11.glVertex2d(x, y2);
         GL11.glVertex2d(x2, y2);
@@ -317,11 +317,11 @@ public class RenderUtils implements IMinecraftInstance {
         double yPos = y - mc.getRenderManager().viewerPosY;
         double zPos = z - mc.getRenderManager().viewerPosZ;
         GL11.glPushMatrix();
-        GL11.glBlendFunc(770, 771);
-        glEnable(3042);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL11.GL_BLEND);
         GL11.glLineWidth(2.0f);
-        GL11.glDisable(3553);
-        GL11.glDisable(2929);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glDepthMask(false);
         float n8 = (color >> 24 & 0xFF) / 255.0f;
         float n9 = (color >> 16 & 0xFF) / 255.0f;
@@ -336,10 +336,10 @@ public class RenderUtils implements IMinecraftInstance {
             drawBoundingBox(axisAlignedBB, n9, n10, n11);
         }
         GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        glEnable(3553);
-        glEnable(2929);
+        glEnable(GL11.GL_TEXTURE_2D);
+        glEnable(GL11.GL_DEPTH_TEST);
         GL11.glDepthMask(true);
-        GL11.glDisable(3042);
+        GL11.glDisable(GL11.GL_BLEND);
         glPopMatrix();
     }
 
@@ -362,11 +362,11 @@ public class RenderUtils implements IMinecraftInstance {
         float outlineA = (color >> 24 & 0xFF) / 255.0f;
         float shadeA = 0.25f;
         GL11.glPushMatrix();
-        GL11.glBlendFunc(770, 771);
-        glEnable(3042);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL11.GL_BLEND);
         GL11.glLineWidth(2.0f);
-        GL11.glDisable(3553);
-        GL11.glDisable(2929);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glDepthMask(false);
         Tessellator ts = Tessellator.getInstance();
         WorldRenderer vb = ts.getWorldRenderer();
@@ -476,10 +476,10 @@ public class RenderUtils implements IMinecraftInstance {
             ts.draw();
         }
         GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        glEnable(3553);
-        glEnable(2929);
+        glEnable(GL11.GL_TEXTURE_2D);
+        glEnable(GL11.GL_DEPTH_TEST);
         GL11.glDepthMask(true);
-        GL11.glDisable(3042);
+        GL11.glDisable(GL11.GL_BLEND);
         glPopMatrix();
     }
 
@@ -554,11 +554,11 @@ public class RenderUtils implements IMinecraftInstance {
         int outlineColor = color | 0xFF000000;
 
         GL11.glPushMatrix();
-        GL11.glBlendFunc(770, 771);
-        glEnable(3042);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL11.GL_BLEND);
         GL11.glLineWidth(2.0f);
-        GL11.glDisable(3553);
-        GL11.glDisable(2929);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glDepthMask(false);
 
         if (state.getBlock() instanceof BlockStairs) {
@@ -570,10 +570,10 @@ public class RenderUtils implements IMinecraftInstance {
             }
         }
 
-        glEnable(3553);
-        glEnable(2929);
+        glEnable(GL11.GL_TEXTURE_2D);
+        glEnable(GL11.GL_DEPTH_TEST);
         GL11.glDepthMask(true);
-        GL11.glDisable(3042);
+        GL11.glDisable(GL11.GL_BLEND);
         glPopMatrix();
     }
 
@@ -672,10 +672,10 @@ public class RenderUtils implements IMinecraftInstance {
                     float b = (float) (color & 255) / 255.0F;
                     AxisAlignedBB bbox = e.getEntityBoundingBox().expand(0.1D + expand, 0.1D + expand, 0.1D + expand);
                     AxisAlignedBB axis = new AxisAlignedBB(bbox.minX - e.posX + x, bbox.minY - e.posY + y, bbox.minZ - e.posZ + z, bbox.maxX - e.posX + x, bbox.maxY - e.posY + y, bbox.maxZ - e.posZ + z);
-                    GL11.glBlendFunc(770, 771);
-                    glEnable(3042);
-                    GL11.glDisable(3553);
-                    GL11.glDisable(2929);
+                    GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+                    glEnable(GL11.GL_BLEND);
+                    GL11.glDisable(GL11.GL_TEXTURE_2D);
+                    GL11.glDisable(GL11.GL_DEPTH_TEST);
                     GL11.glDepthMask(false);
                     GL11.glLineWidth(2.0F);
                     GL11.glColor4f(r, g, b, a);
@@ -684,36 +684,36 @@ public class RenderUtils implements IMinecraftInstance {
                     } else if (type == 2) {
                         drawBoundingBox(axis, r, g, b);
                     }
-                    glEnable(3553);
-                    glEnable(2929);
+                    glEnable(GL11.GL_TEXTURE_2D);
+                    glEnable(GL11.GL_DEPTH_TEST);
                     GL11.glDepthMask(true);
-                    GL11.glDisable(3042);
+                    GL11.glDisable(GL11.GL_BLEND);
                 }
             }
             GlStateManager.popMatrix();
         }
     }
 
-    public static void drawPolygon(final double n, final double n2, final double n3, final int n4, final int n5) {
-        if (n4 < 3) {
+    public static void drawPolygon(double centerX, double centerY, double radius, int sides, int color) {
+        if (sides < 3) {
             return;
         }
-        final float n6 = (n5 >> 24 & 0xFF) / 255.0f;
-        final float n7 = (n5 >> 16 & 0xFF) / 255.0f;
-        final float n8 = (n5 >> 8 & 0xFF) / 255.0f;
-        final float n9 = (n5 & 0xFF) / 255.0f;
-        final Tessellator getInstance = Tessellator.getInstance();
-        final WorldRenderer getWorldRenderer = getInstance.getWorldRenderer();
+        float alpha = (color >> 24 & 0xFF) / 255.0f;
+        float red = (color >> 16 & 0xFF) / 255.0f;
+        float green = (color >> 8 & 0xFF) / 255.0f;
+        float blue = (color & 0xFF) / 255.0f;
+        final Tessellator tessellator = Tessellator.getInstance();
+        final WorldRenderer worldrenderer = tessellator.getWorldRenderer();
         GlStateManager.enableBlend();
         GlStateManager.disableTexture2D();
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-        GL11.glColor4f(n7, n8, n9, n6);
-        getWorldRenderer.begin(6, DefaultVertexFormats.POSITION);
-        for (int i = 0; i < n4; ++i) {
-            final double n10 = 6.283185307179586 * i / n4 + Math.toRadians(180.0);
-            getWorldRenderer.pos(n + Math.sin(n10) * n3, n2 + Math.cos(n10) * n3, 0.0).endVertex();
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+        GL11.glColor4f(red, green, blue, alpha);
+        worldrenderer.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION);
+        for (int i = 0; i < sides; ++i) {
+            final double angle = 6.283185307179586 * i / sides + Math.toRadians(180.0);
+            worldrenderer.pos(centerX + Math.sin(angle) * radius, centerY + Math.cos(angle) * radius, 0.0).endVertex();
         }
-        getInstance.draw();
+        tessellator.draw();
         GlStateManager.enableTexture2D();
         GlStateManager.disableBlend();
     }
@@ -743,8 +743,6 @@ public class RenderUtils implements IMinecraftInstance {
         vb.pos(abb.maxX, abb.maxY, abb.maxZ).color(r, g, b, a).endVertex();
         vb.pos(abb.minX, abb.minY, abb.maxZ).color(r, g, b, a).endVertex();
         vb.pos(abb.minX, abb.maxY, abb.maxZ).color(r, g, b, a).endVertex();
-        ts.draw();
-        vb.begin(7, DefaultVertexFormats.POSITION_COLOR);
         vb.pos(abb.maxX, abb.maxY, abb.minZ).color(r, g, b, a).endVertex();
         vb.pos(abb.maxX, abb.minY, abb.minZ).color(r, g, b, a).endVertex();
         vb.pos(abb.minX, abb.maxY, abb.minZ).color(r, g, b, a).endVertex();
@@ -753,8 +751,6 @@ public class RenderUtils implements IMinecraftInstance {
         vb.pos(abb.minX, abb.minY, abb.maxZ).color(r, g, b, a).endVertex();
         vb.pos(abb.maxX, abb.maxY, abb.maxZ).color(r, g, b, a).endVertex();
         vb.pos(abb.maxX, abb.minY, abb.maxZ).color(r, g, b, a).endVertex();
-        ts.draw();
-        vb.begin(7, DefaultVertexFormats.POSITION_COLOR);
         vb.pos(abb.minX, abb.maxY, abb.minZ).color(r, g, b, a).endVertex();
         vb.pos(abb.maxX, abb.maxY, abb.minZ).color(r, g, b, a).endVertex();
         vb.pos(abb.maxX, abb.maxY, abb.maxZ).color(r, g, b, a).endVertex();
@@ -763,8 +759,6 @@ public class RenderUtils implements IMinecraftInstance {
         vb.pos(abb.minX, abb.maxY, abb.maxZ).color(r, g, b, a).endVertex();
         vb.pos(abb.maxX, abb.maxY, abb.maxZ).color(r, g, b, a).endVertex();
         vb.pos(abb.maxX, abb.maxY, abb.minZ).color(r, g, b, a).endVertex();
-        ts.draw();
-        vb.begin(7, DefaultVertexFormats.POSITION_COLOR);
         vb.pos(abb.minX, abb.minY, abb.minZ).color(r, g, b, a).endVertex();
         vb.pos(abb.maxX, abb.minY, abb.minZ).color(r, g, b, a).endVertex();
         vb.pos(abb.maxX, abb.minY, abb.maxZ).color(r, g, b, a).endVertex();
@@ -773,8 +767,6 @@ public class RenderUtils implements IMinecraftInstance {
         vb.pos(abb.minX, abb.minY, abb.maxZ).color(r, g, b, a).endVertex();
         vb.pos(abb.maxX, abb.minY, abb.maxZ).color(r, g, b, a).endVertex();
         vb.pos(abb.maxX, abb.minY, abb.minZ).color(r, g, b, a).endVertex();
-        ts.draw();
-        vb.begin(7, DefaultVertexFormats.POSITION_COLOR);
         vb.pos(abb.minX, abb.minY, abb.minZ).color(r, g, b, a).endVertex();
         vb.pos(abb.minX, abb.maxY, abb.minZ).color(r, g, b, a).endVertex();
         vb.pos(abb.minX, abb.minY, abb.maxZ).color(r, g, b, a).endVertex();
@@ -783,8 +775,6 @@ public class RenderUtils implements IMinecraftInstance {
         vb.pos(abb.maxX, abb.maxY, abb.maxZ).color(r, g, b, a).endVertex();
         vb.pos(abb.maxX, abb.minY, abb.minZ).color(r, g, b, a).endVertex();
         vb.pos(abb.maxX, abb.maxY, abb.minZ).color(r, g, b, a).endVertex();
-        ts.draw();
-        vb.begin(7, DefaultVertexFormats.POSITION_COLOR);
         vb.pos(abb.minX, abb.maxY, abb.maxZ).color(r, g, b, a).endVertex();
         vb.pos(abb.minX, abb.minY, abb.maxZ).color(r, g, b, a).endVertex();
         vb.pos(abb.minX, abb.maxY, abb.minZ).color(r, g, b, a).endVertex();
@@ -951,8 +941,8 @@ public class RenderUtils implements IMinecraftInstance {
         GlStateManager.disableTexture2D();
         GlStateManager.enableBlend();
         GlStateManager.disableAlpha();
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-        GlStateManager.shadeModel(7425);
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+        GlStateManager.shadeModel(GL11.GL_SMOOTH);
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer worldrenderer = tessellator.getWorldRenderer();
         worldrenderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
@@ -961,7 +951,7 @@ public class RenderUtils implements IMinecraftInstance {
         worldrenderer.pos((double) left, (double) bottom, 0.0D).color(f5, f6, f7, f4).endVertex();
         worldrenderer.pos((double) right, (double) bottom, 0.0D).color(f5, f6, f7, f4).endVertex();
         tessellator.draw();
-        GlStateManager.shadeModel(7424);
+        GlStateManager.shadeModel(GL11.GL_FLAT);
         GlStateManager.disableBlend();
         GlStateManager.enableAlpha();
         GlStateManager.enableTexture2D();
@@ -1001,18 +991,18 @@ public class RenderUtils implements IMinecraftInstance {
         float g = (float) (color >> 8 & 255) / 255.0F;
         float b = (float) (color & 255) / 255.0F;
         mc.entityRenderer.disableLightmap();
-        GL11.glDisable(3553);
-        glEnable(3042);
-        GL11.glBlendFunc(770, 771);
-        GL11.glDisable(2929);
-        glEnable(2848);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        glEnable(GL11.GL_LINE_SMOOTH);
         GL11.glDepthMask(false);
         GL11.glLineWidth(lineWidth);
         if (!chroma) {
             GL11.glColor4f(r, g, b, a);
         }
 
-        GL11.glBegin(1);
+        GL11.glBegin(GL11.GL_LINES);
         long d = 0L;
         long ed = 15000L / (long) sides;
         long hed = ed / 2L;
@@ -1041,10 +1031,10 @@ public class RenderUtils implements IMinecraftInstance {
         GL11.glEnd();
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         GL11.glDepthMask(true);
-        GL11.glDisable(2848);
-        glEnable(2929);
-        GL11.glDisable(3042);
-        glEnable(3553);
+        GL11.glDisable(GL11.GL_LINE_SMOOTH);
+        glEnable(GL11.GL_DEPTH_TEST);
+        GL11.glDisable(GL11.GL_BLEND);
+        glEnable(GL11.GL_TEXTURE_2D);
         mc.entityRenderer.enableLightmap();
     }
 
@@ -1069,14 +1059,14 @@ public class RenderUtils implements IMinecraftInstance {
     }
 
     public static void drawTriangle(double x, double y, double size, double widthDiv, double heightDiv, int color) {
-        boolean blend = GL11.glIsEnabled(3042);
-        glEnable(3042);
-        GL11.glDisable(3553);
-        GL11.glBlendFunc(770, 771);
-        glEnable(2848);
+        boolean blend = GL11.glIsEnabled(GL11.GL_BLEND);
+        glEnable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL11.GL_LINE_SMOOTH);
         GL11.glPushMatrix();
         glColor(color);
-        GL11.glBegin(7);
+        GL11.glBegin(GL11.GL_QUADS);
         GL11.glVertex2d(x, y);
         GL11.glVertex2d((x - size / widthDiv), (y + size));
         GL11.glVertex2d(x, (y + size / heightDiv));
@@ -1084,7 +1074,7 @@ public class RenderUtils implements IMinecraftInstance {
         GL11.glVertex2d(x, y);
         GL11.glEnd();
         GL11.glColor4f(0.0f, 0.0f, 0.0f, 0.8f);
-        GL11.glBegin(2);
+        GL11.glBegin(GL11.GL_LINE_LOOP);
         GL11.glVertex2d(x, y);
         GL11.glVertex2d((x - size / widthDiv), (y + size));
         GL11.glVertex2d(x, (y + size / heightDiv));
@@ -1092,84 +1082,84 @@ public class RenderUtils implements IMinecraftInstance {
         GL11.glVertex2d(x, y);
         GL11.glEnd();
         glPopMatrix();
-        glEnable(3553);
+        glEnable(GL11.GL_TEXTURE_2D);
         if (!blend) {
-            GL11.glDisable(3042);
+            GL11.glDisable(GL11.GL_BLEND);
         }
-        GL11.glDisable(2848);
+        GL11.glDisable(GL11.GL_LINE_SMOOTH);
     }
 
-    public static void glColor(final int n) { // credit to the creator of raven b4
-        GL11.glColor4f((float) (n >> 16 & 0xFF) / 255.0f, (float) (n >> 8 & 0xFF) / 255.0f, (float) (n & 0xFF) / 255.0f, (float) (n >> 24 & 0xFF) / 255.0f);
+    public static void glColor(int color) {
+        float red = (color >> 16 & 0xFF) / 255.0f;
+        float green = (color >> 8 & 0xFF) / 255.0f;
+        float blue = (color & 0xFF) / 255.0f;
+        float alpha = (color >> 24 & 0xFF) / 255.0f;
+        GL11.glColor4f(red, green, blue, alpha);
     }
 
-    public static void drawRoundedGradientOutlinedRectangle(float x, float y, float x2, float y2, final float radius, final int n6, final int n7, final int n8) { // credit to the creator of raven b4
-        x *= 2.0f;
-        y *= 2.0f;
-        x2 *= 2.0f;
-        y2 *= 2.0f;
+    public static void drawRoundedGradientOutlinedRectangle(float x0, float y0, float x1, float y1, final float radius, final int fillColor, final int outlineColorA, final int outlineColorB) {
+        x0 *= 2.0f;
+        y0 *= 2.0f;
+        x1 *= 2.0f;
+        y1 *= 2.0f;
         GL11.glPushMatrix();
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         GL11.glScaled(0.5, 0.5, 0.5);
-        glEnable(3042);
-        GL11.glDisable(3553);
-        glEnable(2848);
-        GL11.glBegin(9);
-        glColor(n6);
-        for (int i = 0; i <= 90; i += 3) {
-            final double n9 = (double) (i * 0.017453292f);
-            GL11.glVertex2d((double) (x + radius) + Math.sin(n9) * radius * -1.0, (double) (y + radius) + Math.cos(n9) * radius * -1.0);
-        }
-        for (int j = 90; j <= 180; j += 3) {
-            final double n10 = (double) (j * 0.017453292f);
-            GL11.glVertex2d((double) (x + radius) + Math.sin(n10) * radius * -1.0, (double) (y2 - radius) + Math.cos(n10) * radius * -1.0);
-        }
-        for (int k = 0; k <= 90; k += 3) {
-            final double n11 = (double) (k * 0.017453292f);
-            GL11.glVertex2d((double) (x2 - radius) + Math.sin(n11) * radius, (double) (y2 - radius) + Math.cos(n11) * radius);
-        }
-        for (int l = 90; l <= 180; l += 3) {
-            final double n12 = (double) (l * 0.017453292f);
-            GL11.glVertex2d((double) (x2 - radius) + Math.sin(n12) * radius, (double) (y + radius) + Math.cos(n12) * radius);
-        }
+        glEnable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        glEnable(GL11.GL_LINE_SMOOTH);
+        // 填充
+        GL11.glBegin(GL11.GL_POLYGON);
+        glColor(fillColor);
+        drawRoundedCorners(x0, y0, x1, y1, radius);
         GL11.glEnd();
+        // 描边（左半与右半颜色不同以形成渐变）
         GL11.glPushMatrix();
-        GL11.glShadeModel(7425);
+        GL11.glShadeModel(GL11.GL_SMOOTH);
         GL11.glLineWidth(2.0f);
-        GL11.glBegin(2);
-        if (n7 != 0L) {
-            glColor(n7);
+        GL11.glBegin(GL11.GL_LINE_LOOP);
+        if (outlineColorA != 0) {
+            glColor(outlineColorA);
         }
-        for (int n13 = 0; n13 <= 90; n13 += 3) {
-            final double n14 = (double) (n13 * 0.017453292f);
-            GL11.glVertex2d((double) (x + radius) + Math.sin(n14) * radius * -1.0, (double) (y + radius) + Math.cos(n14) * radius * -1.0);
+        drawRoundedCornersLeft(x0, y0, x1, y1, radius);
+        if (outlineColorB != 0) {
+            glColor(outlineColorB);
         }
-        for (int n15 = 90; n15 <= 180; n15 += 3) {
-            final double n16 = (double) (n15 * 0.017453292f);
-            GL11.glVertex2d((double) (x + radius) + Math.sin(n16) * radius * -1.0, (double) (y2 - radius) + Math.cos(n16) * radius * -1.0);
-        }
-        if (n8 != 0) {
-            glColor(n8);
-        }
-        for (int n17 = 0; n17 <= 90; n17 += 3) {
-            final double n18 = (double) (n17 * 0.017453292f);
-            GL11.glVertex2d((double) (x2 - radius) + Math.sin(n18) * radius, (double) (y2 - radius) + Math.cos(n18) * radius);
-        }
-        for (int n19 = 90; n19 <= 180; n19 += 3) {
-            final double n20 = (double) (n19 * 0.017453292f);
-            GL11.glVertex2d((double) (x2 - radius) + Math.sin(n20) * radius, (double) (y + radius) + Math.cos(n20) * radius);
-        }
+        drawRoundedCornersRight(x0, y0, x1, y1, radius);
         GL11.glEnd();
         glPopMatrix();
-        glEnable(3553);
-        GL11.glDisable(3042);
-        GL11.glDisable(2848);
-        glEnable(3553);
+        glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_LINE_SMOOTH);
+        glEnable(GL11.GL_TEXTURE_2D);
         GL11.glPopAttrib();
         GL11.glPopMatrix();
         GL11.glLineWidth(1.0f);
-        GL11.glShadeModel(7424);
+        GL11.glShadeModel(GL11.GL_FLAT);
         GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    // 依序输出四段 90° 圆弧顶点（填充扇形与描边共用同一顺序）
+    private static void drawRoundedCorners(float x0, float y0, float x1, float y1, float radius) {
+        drawRoundedCornersLeft(x0, y0, x1, y1, radius);
+        drawRoundedCornersRight(x0, y0, x1, y1, radius);
+    }
+
+    private static void drawRoundedCornersLeft(float x0, float y0, float x1, float y1, float radius) {
+        drawCornerArc(x0 + radius, y0 + radius, 0, 90, -1.0, radius);
+        drawCornerArc(x0 + radius, y1 - radius, 90, 180, -1.0, radius);
+    }
+
+    private static void drawRoundedCornersRight(float x0, float y0, float x1, float y1, float radius) {
+        drawCornerArc(x1 - radius, y1 - radius, 0, 90, 1.0, radius);
+        drawCornerArc(x1 - radius, y0 + radius, 90, 180, 1.0, radius);
+    }
+
+    private static void drawCornerArc(double centerX, double centerY, int angleStart, int angleEnd, double direction, double radius) {
+        for (int angle = angleStart; angle <= angleEnd; angle += 3) {
+            double rad = angle * 0.017453292f;
+            GL11.glVertex2d(centerX + Math.sin(rad) * radius * direction, centerY + Math.cos(rad) * radius * direction);
+        }
     }
 
     public static void draw2DPolygon(final double x, final double y, final double radius, final int sides, final int color) {
@@ -1184,7 +1174,7 @@ public class RenderUtils implements IMinecraftInstance {
         final WorldRenderer worldrenderer = tessellator.getWorldRenderer();
         GlStateManager.enableBlend();
         GlStateManager.disableTexture2D();
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
         GL11.glEnable(GL11.GL_LINE_SMOOTH);
         GL11.glColor4f(r, g, b, a);
         final double rad180 = Math.toRadians(180.0);
@@ -1346,10 +1336,10 @@ public class RenderUtils implements IMinecraftInstance {
         GL11.glPushMatrix();
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         GL11.glScaled(0.5, 0.5, 0.5);
-        glEnable(3042);
-        GL11.glDisable(3553);
-        glEnable(2848);
-        GL11.glBegin(9);
+        glEnable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        glEnable(GL11.GL_LINE_SMOOTH);
+        GL11.glBegin(GL11.GL_POLYGON);
         glColor(color);
         for (int i = 0; i <= 90; i += 3) {
             final double n7 = (double) (i * 0.017453292f);
@@ -1370,10 +1360,10 @@ public class RenderUtils implements IMinecraftInstance {
             }
         }
         GL11.glEnd();
-        glEnable(3553);
-        GL11.glDisable(3042);
-        GL11.glDisable(2848);
-        glEnable(3553);
+        glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_LINE_SMOOTH);
+        glEnable(GL11.GL_TEXTURE_2D);
         GL11.glPopAttrib();
         GL11.glPopMatrix();
         GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
@@ -1400,7 +1390,7 @@ public class RenderUtils implements IMinecraftInstance {
         GL11.glPopMatrix();
     }
 
-    public static void drawRoundedGradientRect(float x, float y, float x2, float y2, float radius, final int n6, final int n7, final int n8, final int n9) {
+    public static void drawRoundedGradientRect(float x, float y, float x2, float y2, float radius, final int colorTopLeft, final int colorBottomLeft, final int colorBottomRight, final int colorTopRight) {
         if (x2 <= x) {
             return;
         }
@@ -1411,11 +1401,11 @@ public class RenderUtils implements IMinecraftInstance {
             radius = Math.min(radius, width / 2.0f);
         }
 
-        glEnable(3042);
-        GL11.glDisable(3553);
-        GL11.glBlendFunc(770, 771);
-        glEnable(2848);
-        GL11.glShadeModel(7425);
+        glEnable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL11.GL_LINE_SMOOTH);
+        GL11.glShadeModel(GL11.GL_SMOOTH);
         GL11.glPushMatrix();
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         GL11.glScaled(0.5, 0.5, 0.5);
@@ -1423,45 +1413,34 @@ public class RenderUtils implements IMinecraftInstance {
         y *= 2.0;
         x2 *= 2.0;
         y2 *= 2.0;
-        glEnable(3042);
-        GL11.glDisable(3553);
-        glColor(n6);
-        glEnable(2848);
-        GL11.glShadeModel(7425);
-        GL11.glBegin(9);
-        for (int i = 0; i <= 90; i += 3) {
-            final double n10 = i * 0.017453292f;
-            GL11.glVertex2d((double) (x + radius) + Math.sin(n10) * radius * -1.0, (double) (y + radius) + Math.cos(n10) * radius * -1.0);
-        }
-        glColor(n7);
-        for (int j = 90; j <= 180; j += 3) {
-            final double n11 = j * 0.017453292f;
-            GL11.glVertex2d((double) (x + radius) + Math.sin(n11) * radius * -1.0, (double) (y2 - radius) + Math.cos(n11) * radius * -1.0);
-        }
+        glEnable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        glEnable(GL11.GL_LINE_SMOOTH);
+        GL11.glShadeModel(GL11.GL_SMOOTH);
+        //
+        GL11.glBegin(GL11.GL_POLYGON);
+        glColor(colorTopLeft);
+        drawCornerArc(x + radius, y + radius, 0, 90, -1.0, radius);
+        glColor(colorBottomLeft);
+        drawCornerArc(x + radius, y2 - radius, 90, 180, -1.0, radius);
         if (x2 - x >= 4.5) {
-            glColor(n8);
-            for (int k = 0; k <= 90; k += 3) {
-                final double n12 = k * 0.017453292f;
-                GL11.glVertex2d((double) (x2 - radius) + Math.sin(n12) * radius, (double) (y2 - radius) + Math.cos(n12) * radius);
-            }
-            glColor(n9);
-            for (int l = 90; l <= 180; l += 3) {
-                final double n13 = l * 0.017453292f;
-                GL11.glVertex2d((double) (x2 - radius) + Math.sin(n13) * radius, (double) (y + radius) + Math.cos(n13) * radius);
-            }
+            glColor(colorBottomRight);
+            drawCornerArc(x2 - radius, y2 - radius, 0, 90, 1.0, radius);
+            glColor(colorTopRight);
+            drawCornerArc(x2 - radius, y + radius, 90, 180, 1.0, radius);
         }
         GL11.glEnd();
-        glEnable(3553);
-        GL11.glDisable(3042);
-        GL11.glDisable(2848);
-        GL11.glDisable(3042);
-        glEnable(3553);
+        glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_LINE_SMOOTH);
+        GL11.glDisable(GL11.GL_BLEND);
+        glEnable(GL11.GL_TEXTURE_2D);
         GL11.glPopAttrib();
         GL11.glPopMatrix();
-        glEnable(3553);
-        GL11.glDisable(3042);
-        GL11.glDisable(2848);
-        GL11.glShadeModel(7424);
+        glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_LINE_SMOOTH);
+        GL11.glShadeModel(GL11.GL_FLAT);
         GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
@@ -1556,8 +1535,8 @@ public class RenderUtils implements IMinecraftInstance {
         GlStateManager.disableTexture2D();
         GlStateManager.enableBlend();
         GlStateManager.disableAlpha();
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-        GlStateManager.shadeModel(7425);
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+        GlStateManager.shadeModel(GL11.GL_SMOOTH);
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer wr = tessellator.getWorldRenderer();
         wr.begin(7, DefaultVertexFormats.POSITION_COLOR);
@@ -1566,7 +1545,7 @@ public class RenderUtils implements IMinecraftInstance {
         wr.pos(right, top, 0).color(rr, rg, rb, ra).endVertex();
         wr.pos(left, top, 0).color(lr, lg, lb, la).endVertex();
         tessellator.draw();
-        GlStateManager.shadeModel(7424);
+        GlStateManager.shadeModel(GL11.GL_FLAT);
         GlStateManager.disableBlend();
         GlStateManager.enableAlpha();
         GlStateManager.enableTexture2D();
@@ -1584,8 +1563,8 @@ public class RenderUtils implements IMinecraftInstance {
         GlStateManager.disableTexture2D();
         GlStateManager.enableBlend();
         GlStateManager.disableAlpha();
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-        GlStateManager.shadeModel(7425);
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+        GlStateManager.shadeModel(GL11.GL_SMOOTH);
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer wr = tessellator.getWorldRenderer();
         wr.begin(7, DefaultVertexFormats.POSITION_COLOR);
@@ -1594,7 +1573,7 @@ public class RenderUtils implements IMinecraftInstance {
         wr.pos(left, bottom, 0).color(br, bg, bb, ba).endVertex();
         wr.pos(right, bottom, 0).color(br, bg, bb, ba).endVertex();
         tessellator.draw();
-        GlStateManager.shadeModel(7424);
+        GlStateManager.shadeModel(GL11.GL_FLAT);
         GlStateManager.disableBlend();
         GlStateManager.enableAlpha();
         GlStateManager.enableTexture2D();

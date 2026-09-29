@@ -229,8 +229,11 @@ public class MobESP extends Module {
             return;
         }
         double maxDistSq = maxDistance.getInput() * maxDistance.getInput();
-        for (Entity entity : mc.theWorld.loadedEntityList) {
-            if (!(entity instanceof EntityLivingBase) || entity == mc.thePlayer) {
+        double d = maxDistance.getInput();
+        EntityPlayer me = mc.thePlayer;
+        List<Entity> nearby = mc.theWorld.getEntitiesWithinAABB(Entity.class, new AxisAlignedBB(me.posX - d, me.posY - d, me.posZ - d, me.posX + d, me.posY + d, me.posZ + d));
+        for (Entity entity : nearby) {
+            if (!(entity instanceof EntityLivingBase) || entity == me) {
                 continue;
             }
             EntityLivingBase living = (EntityLivingBase) entity;

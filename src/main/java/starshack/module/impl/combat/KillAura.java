@@ -170,7 +170,7 @@ public class KillAura extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeInfo() {
         return modes[(int) mode.getInput()];
     }
 

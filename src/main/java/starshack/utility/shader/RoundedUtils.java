@@ -16,7 +16,7 @@ public class RoundedUtils {
     public static ShaderUtils roundedOutlineShader = new ShaderUtils("roundRectOutline");
     private static final ShaderUtils roundedTexturedShader = new ShaderUtils("roundRectTexture");
     private static final ShaderUtils roundedGradientShader = new ShaderUtils("roundedRectGradient");
-    private static final ShaderUtils roundedRectRiseShader = new ShaderUtils("roundedRectRise");
+    private static final ShaderUtils roundedRectEdgeShader = new ShaderUtils("roundedRectEdge");
 
 
     public static void drawRound(float x, float y, float width, float height, float radius, Color color) {
@@ -158,15 +158,15 @@ public class RoundedUtils {
         roundedTexturedShader.setUniformf("radius", radius * sr.getScaleFactor());
     }
 
-    public static void drawRoundedRectRise(final float x, final float y, final float width, final float height, final float radius, final int color, boolean leftTop, boolean rightTop, boolean rightBottom, boolean leftBottom) {
+    public static void drawRoundedRectEdge(final float x, final float y, final float width, final float height, final float radius, final int color, boolean leftTop, boolean rightTop, boolean rightBottom, boolean leftBottom) {
         GL11.glPushMatrix();
         GlStateManager.pushAttrib();
-        final int programId = roundedRectRiseShader.programID;
+        final int programId = roundedRectEdgeShader.programID;
         GL20.glUseProgram(programId);
-        roundedRectRiseShader.setUniformf("u_size", width, height);
-        roundedRectRiseShader.setUniformf("u_radius", radius);
-        roundedRectRiseShader.setUniformf("u_color", getRed(color), getGreen(color), getBlue(color), getAlpha(color));
-        roundedRectRiseShader.setUniformf("u_edges", leftTop ? 1.0F : 0.0F, rightTop ? 1.0F : 0.0F, rightBottom ? 1.0F : 0.0F, leftBottom ? 1.0F : 0.0F);
+        roundedRectEdgeShader.setUniformf("u_size", width, height);
+        roundedRectEdgeShader.setUniformf("u_radius", radius);
+        roundedRectEdgeShader.setUniformf("u_color", getRed(color), getGreen(color), getBlue(color), getAlpha(color));
+        roundedRectEdgeShader.setUniformf("u_edges", leftTop ? 1.0F : 0.0F, rightTop ? 1.0F : 0.0F, rightBottom ? 1.0F : 0.0F, leftBottom ? 1.0F : 0.0F);
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         ShaderUtils.drawQuads(x, y, width, height);
@@ -176,8 +176,8 @@ public class RoundedUtils {
         GL11.glPopMatrix();
     }
 
-    public static void drawRoundedRectRise(final double x, final double y, final double width, final double height, final double radius, final int color) {
-        drawRoundedRectRise((float) x, (float) y, (float) width, (float) height, (float) radius, color, true, true, true, true);
+    public static void drawRoundedRectEdge(final double x, final double y, final double width, final double height, final double radius, final int color) {
+        drawRoundedRectEdge((float) x, (float) y, (float) width, (float) height, (float) radius, color, true, true, true, true);
     }
 
     private static float getRed(int color) {

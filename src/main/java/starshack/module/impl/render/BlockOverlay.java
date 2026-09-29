@@ -97,7 +97,7 @@ public class BlockOverlay extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeInfo() {
         return RENDER_MODES[(int) renderMode.getInput()];
     }
 
@@ -143,7 +143,7 @@ public class BlockOverlay extends Module {
         GL11.glPushMatrix();
         GlStateManager.disableCull();
         GlStateManager.enableBlend();
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
         GlStateManager.disableTexture2D();
         GlStateManager.depthMask(false);
         boolean depthDisabled = depthless.isToggled();
@@ -183,7 +183,7 @@ public class BlockOverlay extends Module {
         GL11.glPushMatrix();
         GlStateManager.disableCull();
         GlStateManager.enableBlend();
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
         GlStateManager.disableTexture2D();
         GlStateManager.depthMask(false);
         if (depthless) {

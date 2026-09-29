@@ -38,9 +38,9 @@ public class RotationUtils implements IMinecraftInstance {
         }
     }
 
-    public static float[] getRotations(BlockPos blockPos, final float n, final float n2) {
-        final float[] array = getRotations(blockPos);
-        return fixRotation(array[0], array[1], n, n2);
+    public static float[] getRotations(BlockPos blockPos, final float yaw, final float pitch) {
+        final float[] rotations = getRotations(blockPos);
+        return fixRotation(rotations[0], rotations[1], yaw, pitch);
     }
 
     public static float[] getRotationsToBlock(BlockPos blockPos, EnumFacing facing, final float yaw, final float pitch) {
@@ -129,11 +129,11 @@ public class RotationUtils implements IMinecraftInstance {
     }
 
     public static double distanceFromYaw(final Entity entity, final boolean b) {
-        return Math.abs(MathHelper.wrapAngleTo180_double(i(entity.posX, entity.posZ) - ((b && PreMotionEvent.setRenderYaw()) ? RotationUtils.renderYaw : mc.thePlayer.rotationYaw)));
+        return Math.abs(MathHelper.wrapAngleTo180_double(getYawTo(entity.posX, entity.posZ) - ((b && PreMotionEvent.setRenderYaw()) ? RotationUtils.renderYaw : mc.thePlayer.rotationYaw)));
     }
 
-    public static float i(final double n, final double n2) {
-        return (float) (Math.atan2(n - mc.thePlayer.posX, n2 - mc.thePlayer.posZ) * 57.295780181884766 * -1.0);
+    public static float getYawTo(final double targetX, final double targetZ) {
+        return (float) (Math.atan2(targetX - mc.thePlayer.posX, targetZ - mc.thePlayer.posZ) * 57.295780181884766 * -1.0);
     }
 
     public static boolean isPossibleToHit(Entity target, double reach, float[] rotations) {
@@ -683,12 +683,12 @@ public class RotationUtils implements IMinecraftInstance {
         return new float[]{targetYaw, clampPitch(targetPitch)};
     }
 
-    public static float angle(final double n, final double n2) {
-        return (float) (Math.atan2(n - mc.thePlayer.posX, n2 - mc.thePlayer.posZ) * 57.295780181884766 * -1.0);
+    public static float getYawTowards(final double targetX, final double targetZ) {
+        return (float) (Math.atan2(targetX - mc.thePlayer.posX, targetZ - mc.thePlayer.posZ) * 57.295780181884766 * -1.0);
     }
 
-    public static float deltaAngle(final double n, final double n2) {
-        return (float) (Math.atan2(n, n2) * 57.295780181884766 * -1.0);
+    public static float getRelativeYaw(final double x, final double z) {
+        return (float) (Math.atan2(x, z) * 57.295780181884766 * -1.0);
     }
 
     public static MovingObjectPosition rayCast(double distance, float yaw, float pitch, boolean collisionCheck) {

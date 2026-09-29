@@ -70,9 +70,14 @@ public class BlockESP extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeTimedInfo() {
         int total = SharedBlockHighlightCache.get().totalBlockList();
         return total > 0 ? String.valueOf(total) : "";
+    }
+
+    @Override
+    protected long cacheTtlMillis() {
+        return 100L;
     }
 
     @SubscribeEvent

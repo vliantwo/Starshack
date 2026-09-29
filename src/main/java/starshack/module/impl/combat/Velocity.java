@@ -120,7 +120,7 @@ public class Velocity extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeInfo() {
         if (isPrediction()) return "Prediction";
         return (int) horizontal.getInput() + "% " + (int) vertical.getInput() + "%";
     }

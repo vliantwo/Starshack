@@ -39,7 +39,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Holds inbound movement packets so the client keeps a target at an older,
- * hittable position. This is a Java/1.8.9 port of LiquidBounce's Backtrack.
+ * hittable position.
  */
 public class BackTrack extends Module {
     private static final String[] TARGET_MODES = {"Attack", "Range"};
@@ -115,8 +115,13 @@ public class BackTrack extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeTimedInfo() {
         return currentDelay + "ms";
+    }
+
+    @Override
+    protected long cacheTtlMillis() {
+        return 100L;
     }
 
     @SubscribeEvent

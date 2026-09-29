@@ -129,7 +129,7 @@ public class Displace extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeInfo() {
         int ms = (int) Math.round(delay.getInput());
         return ms + "ms";
     }

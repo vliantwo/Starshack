@@ -101,8 +101,13 @@ public class AutoRun extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeTimedInfo() {
         return mc.gameSettings.keyBindSneak.isKeyDown() ? "Down" : "UP";
+    }
+
+    @Override
+    protected long cacheTtlMillis() {
+        return 100L;
     }
 
     @SubscribeEvent(priority = EventPriority.HIGH)

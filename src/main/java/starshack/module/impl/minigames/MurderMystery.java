@@ -167,26 +167,26 @@ public class MurderMystery extends Module {
         }
     }
 
-    public void drawBox(int n, double n4, double n5, double n6, double n7) {
-        n4 -= mc.getRenderManager().viewerPosX;
-        n5 -= mc.getRenderManager().viewerPosY;
-        n6 -= mc.getRenderManager().viewerPosZ;
+    public void drawBox(int color, double x, double y, double z, double distance) {
+        x -= mc.getRenderManager().viewerPosX;
+        y -= mc.getRenderManager().viewerPosY;
+        z -= mc.getRenderManager().viewerPosZ;
         GL11.glPushMatrix();
-        GL11.glBlendFunc(770, 771);
-        GL11.glEnable(3042);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glEnable(GL11.GL_BLEND);
         GL11.glLineWidth(2.0f);
-        GL11.glDisable(3553);
-        GL11.glDisable(2929);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glDepthMask(false);
-        float n8 = (n >> 16 & 0xFF) / 255.0f;
-        float n9 = (n >> 8 & 0xFF) / 255.0f;
-        float n10 = (n & 0xFF) / 255.0f;
-        float min = Math.min(Math.max(0.2f, (float) (0.009999999776482582 * n7)), 0.4f);
-        RenderUtils.drawBoundingBox(new AxisAlignedBB(n4 - min, n5, n6 - min, n4 + min, n5 + min * 2.0f, n6 + min), n8, n9, n10, 0.35f);
-        GL11.glEnable(3553);
-        GL11.glEnable(2929);
+        float red = (color >> 16 & 0xFF) / 255.0f;
+        float green = (color >> 8 & 0xFF) / 255.0f;
+        float blue = (color & 0xFF) / 255.0f;
+        float min = Math.min(Math.max(0.2f, (float) (0.009999999776482582 * distance)), 0.4f);
+        RenderUtils.drawBoundingBox(new AxisAlignedBB(x - min, y, z - min, x + min, y + min * 2.0f, z + min), red, green, blue, 0.35f);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glDepthMask(true);
-        GL11.glDisable(3042);
+        GL11.glDisable(GL11.GL_BLEND);
         GL11.glPopMatrix();
     }
 

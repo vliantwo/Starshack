@@ -16,10 +16,10 @@ import java.lang.reflect.Field;
 import java.util.Random;
 
 /**
- * NewAutoClicker —— 逻辑移植自 LiquidBounce Legacy 版 AutoClicker.kt
+ * NewAutoClicker —— 高性能自动连点器。
  * <p>
- * 真源核心逻辑对照：
- * - leftDelay / rightDelay = TimeUtils.randomClickDelay(minCPS, maxCPS)
+ * 核心逻辑：
+ * - leftDelay / rightDelay = randomClickDelay(minCPS, maxCPS)
  * 即 random(1000/maxCPS, 1000/minCPS]，在换算后的延迟区间均匀随机
  * - blockBrokenDelay = 1000/20 * (6+2) = 400ms，破坏方块后强制冷却，
  * 保证"clicker 永远不会在破坏方块的间隙里点击"
@@ -28,7 +28,7 @@ import java.util.Random;
  */
 public class NewAutoClicker extends Module {
 
-    // ===== 方块破坏节流（对齐 Legacy：blockBrokenDelay / blockLastBroken / isBreakingBlock / wasBreakingBlock）=====
+    // ===== 方块破坏节流（blockBrokenDelay / blockLastBroken / isBreakingBlock / wasBreakingBlock）=====
     private static final long BLOCK_BROKEN_DELAY = 1000L / 20L * (6L + 2L); // = 400ms
     private final Random rand = new Random();
     // ===== 左键 =====
@@ -41,12 +41,12 @@ public class NewAutoClicker extends Module {
     public SliderSetting rightMaxCPS;
     // ===== 行为 =====
     public ButtonSetting jitter;
-    public ButtonSetting blockBreakDelay;       // 破坏方块时禁用点击（LiquidBounce Legacy 核心逻辑）
+    public ButtonSetting blockBreakDelay;       // 破坏方块时禁用点击
     public ButtonSetting onlyWhenHolding;       // 仅按住鼠标时点击
     public ButtonSetting notUsingItem;          // 使用物品时不点击
     public ButtonSetting disableInCreative;     // 创造模式禁用
     public ButtonSetting weaponOnly;            // 仅手持武器时点击
-    // ===== 点击调度（对齐 Legacy：leftDelay / rightDelay / leftLastSwing / rightLastSwing）=====
+    // ===== 点击调度（leftDelay / rightDelay / leftLastSwing / rightLastSwing）=====
     private long leftDelay;
     private long rightDelay;
     private long leftLastSwing;
@@ -59,7 +59,7 @@ public class NewAutoClicker extends Module {
         super("New Auto Clicker", category.combat, 0);
         this.closetModule = true;
 
-        this.registerSetting(new DescriptionSetting("LiquidBounce style auto clicker."));
+        this.registerSetting(new DescriptionSetting("Automatic auto-clicker."));
 
         // 左键
         this.registerSetting(leftClick = new ButtonSetting("Left click", true));
@@ -100,7 +100,6 @@ public class NewAutoClicker extends Module {
     }
 
     /**
-     * 对齐 LiquidBounce 的 TimeUtils.randomClickDelay(min, max)：
      * return random.nextInt(1000 / maxCPS, 1000 / minCPS + 1);
      * 即在 [1000/maxCPS, 1000/minCPS] 区间内均匀随机，CPS 越高延迟越小。
      */
@@ -150,15 +149,15 @@ public class NewAutoClicker extends Module {
     }
 
     /**
-     * 对齐 LiquidBounce Legacy：在 UpdateEvent（ClientTickEvent START）里更新方块破坏状态机，
-     * 在 RenderTickEvent END 里执行点击 —— 与 Legacy 的 onUpdate + onRender 分工一致。
+     * 在 UpdateEvent（ClientTickEvent START）里更新方块破坏状态机，
+     * 在 RenderTickEvent END 里执行点击。
      */
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent e) {
         if (e.phase != TickEvent.Phase.START) return;
         if (!Utils.nullCheck()) return;
 
-        // ===== 方块破坏状态机（完全对齐 Legacy）=====
+        // ===== 方块破坏状态机 =====
         float blockDamage = getCurBlockDamageMP();
         boolean breakingNow = blockDamage > 0F;
 
@@ -204,7 +203,7 @@ public class NewAutoClicker extends Module {
             rightLastSwing = 0L;
         }
 
-        // ===== Jitter（对齐 Legacy：仅左键激活且可点击时触发）=====
+        // ===== Jitter（仅左键激活且可点击时触发）=====
         if (jitter.isToggled() && leftClick.isToggled()
                 && Mouse.isButtonDown(0) && canLeftClick(now, wasBreaking)) {
             if (rand.nextBoolean()) {
@@ -213,7 +212,7 @@ public class NewAutoClicker extends Module {
         }
     }
 
-    // ===== canAutoClick：对齐 Legacy 的 leftCanAutoClick / rightCanAutoClick =====
+    // ===== canAutoClick：leftCanAutoClick / rightCanAutoClick =====
     private boolean canLeftClick(long now, boolean wasBreaking) {
         if (leftLastSwing != 0 && now - leftLastSwing < leftDelay) return false;
         if (ModuleManager.killAura != null && ModuleManager.killAura.isEnabled() && KillAura.target != null)
@@ -233,7 +232,7 @@ public class NewAutoClicker extends Module {
     }
 
     /**
-     * 对齐 Legacy：!isBreakingBlock && !(currentTime - blockLastBroken < blockBrokenDelay)
+     * 条件：!isBreakingBlock && !(currentTime - blockLastBroken < blockBrokenDelay)
      * blockBreakDelay 关闭时直接放行。
      */
     private boolean canBreakClick(long now, boolean wasBreaking) {

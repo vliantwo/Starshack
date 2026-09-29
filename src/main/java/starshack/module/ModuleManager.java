@@ -45,7 +45,7 @@ public class ModuleManager {
     public static NoSlow noSlow;
     public static KillAura killAura;
     public static AutoClicker autoClicker;
-    public static NewAutoClicker newAutoClicker;     // ★ LiquidBounce 风格连点器
+    public static NewAutoClicker newAutoClicker;     // ★ 连点器
     public static StarAutoClicker StarAutoClicker;   // ★ 连点器
     public static KnockbackDelay knockbackDelay;
     public static HitBox hitBox;

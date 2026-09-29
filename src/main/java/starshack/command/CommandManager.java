@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Client chat-command registry and dispatcher, based on Suzuran's command flow.
+ * Client chat-command registry and dispatcher.
  */
 public class CommandManager {
     public static final String DEFAULT_PREFIX = ";";

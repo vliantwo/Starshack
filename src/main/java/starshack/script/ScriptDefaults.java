@@ -1193,10 +1193,10 @@ public class ScriptDefaults {
             AxisAlignedBB bbox = e.getEntityBoundingBox().expand(0.1, 0.1, 0.1);
             AxisAlignedBB axis = new AxisAlignedBB(bbox.minX - e.posX + x, bbox.minY - e.posY + y, bbox.minZ - e.posZ + z, bbox.maxX - e.posX + x, bbox.maxY - e.posY + y, bbox.maxZ - e.posZ + z);
             GL11.glPushMatrix();
-            GL11.glBlendFunc(770, 771);
-            GL11.glEnable(3042);
-            GL11.glDisable(3553);
-            GL11.glDisable(2929);
+            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GL11.glEnable(GL11.GL_BLEND);
+            GL11.glDisable(GL11.GL_TEXTURE_2D);
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
             GL11.glDepthMask(false);
             GL11.glLineWidth(2.0f);
             float a = (color >> 24 & 0xFF) / 255.0f;
@@ -1210,10 +1210,10 @@ public class ScriptDefaults {
             if (shade) {
                 RenderUtils.drawBoundingBox(axis, r, g, b);
             }
-            GL11.glEnable(3553);
-            GL11.glEnable(2929);
+            GL11.glEnable(GL11.GL_TEXTURE_2D);
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
             GL11.glDepthMask(true);
-            GL11.glDisable(3042);
+            GL11.glDisable(GL11.GL_BLEND);
             GL11.glPopMatrix();
         }
 
@@ -1265,7 +1265,7 @@ public class ScriptDefaults {
             }
             if (image.textureId == -1) {
                 final DynamicTexture dynamicTexture = new DynamicTexture(image.bufferedImage);
-                GL11.glTexParameteri(3553, 10240, 9728);
+                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
                 dynamicTexture.updateDynamicTexture();
                 image.textureId = dynamicTexture.getGlTextureId();
             }
@@ -1273,7 +1273,7 @@ public class ScriptDefaults {
             GlStateManager.enableTexture2D();
             GlStateManager.bindTexture(image.textureId);
             GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
-            GL11.glTexParameteri(3553, 10240, 9728);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
             Tessellator tessellator = Tessellator.getInstance();
             WorldRenderer worldrenderer = tessellator.getWorldRenderer();
             worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
@@ -1302,7 +1302,7 @@ public class ScriptDefaults {
         }
 
         public static void roundedRect(float startX, float startY, float endX, float endY, float radius, int color) {
-            RoundedUtils.drawRoundedRectRise(startX, startY, Math.abs(startX - endX), Math.abs(startY - endY), radius, color);
+            RoundedUtils.drawRoundedRectEdge(startX, startY, Math.abs(startX - endX), Math.abs(startY - endY), radius, color);
         }
 
         public static void gradientRect(float startX, float startY, float endX, float endY, int leftColor, int rightColor) {
@@ -1340,7 +1340,7 @@ public class ScriptDefaults {
                 GlStateManager.scale(scale, scale, scale);
             }
             GlStateManager.enableBlend();
-            GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+            GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
             mc.fontRendererObj.drawString(text, x / scale, y / scale, color, shadow);
             GlStateManager.disableBlend();
             if (scale != 1.0f) {
@@ -1367,7 +1367,7 @@ public class ScriptDefaults {
                 GlStateManager.disableDepth();
             }
             GlStateManager.enableBlend();
-            GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+            GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
             if (background) {
                 GlStateManager.disableTexture2D();
                 int width = mc.fontRendererObj.getStringWidth(text);
@@ -1417,7 +1417,7 @@ public class ScriptDefaults {
             GL11.glPushMatrix();
             GlStateManager.enableBlend();
             GlStateManager.disableTexture2D();
-            GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+            GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
             GlStateManager.color(f4, f5, f6, f3);
             worldrenderer.begin(7, DefaultVertexFormats.POSITION);
             worldrenderer.pos((double) startX, (double) endY, 0.0).endVertex();
@@ -1466,22 +1466,22 @@ public class ScriptDefaults {
             final float g = (color >> 8 & 0xFF) / 255.0f;
             final float b = (color & 0xFF) / 255.0f;
             GL11.glPushMatrix();
-            GL11.glEnable(3042);
-            GL11.glEnable(2848);
-            GL11.glDisable(2929);
-            GL11.glDisable(3553);
-            GL11.glBlendFunc(770, 771);
+            GL11.glEnable(GL11.GL_BLEND);
+            GL11.glEnable(GL11.GL_LINE_SMOOTH);
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+            GL11.glDisable(GL11.GL_TEXTURE_2D);
+            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
             GL11.glLineWidth(lineWidth);
             GlStateManager.color(r, g, b, a);
-            GL11.glBegin(2);
+            GL11.glBegin(GL11.GL_LINE_LOOP);
             GL11.glVertex3d(sx, sy, sz);
             GL11.glVertex3d(endX, endY, endZ);
             GL11.glEnd();
             GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
-            GL11.glEnable(3553);
-            GL11.glEnable(2929);
-            GL11.glDisable(2848);
-            GL11.glDisable(3042);
+            GL11.glEnable(GL11.GL_TEXTURE_2D);
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
+            GL11.glDisable(GL11.GL_LINE_SMOOTH);
+            GL11.glDisable(GL11.GL_BLEND);
             GL11.glPopMatrix();
         }
 

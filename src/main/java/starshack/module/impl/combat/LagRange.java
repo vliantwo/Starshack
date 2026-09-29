@@ -90,7 +90,7 @@ public class LagRange extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeInfo() {
         return (int) maximumDelay.getInput() + "ms";
     }
 

@@ -15,7 +15,10 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 public class Module {
     protected ArrayList<Setting> settings;
@@ -39,6 +42,147 @@ public class Module {
         for (category cat : category.values()) {
             categoriesString.add(cat.name());
         }
+    }
+
+    // 常用模块的搜索别名，按类名（小写无空格）索引，方便在 ClickGUI 里用缩写搜到模块
+    private static final Map<String, String[]> DEFAULT_ALIASES = new HashMap<>();
+
+    static {
+        // combat
+        DEFAULT_ALIASES.put("killaura", new String[]{"ka", "killeraura"});
+        DEFAULT_ALIASES.put("newautoclicker", new String[]{"autoclicker", "nac", "cps"});
+        DEFAULT_ALIASES.put("autoclicker", new String[]{"ac"});
+        DEFAULT_ALIASES.put("velocity", new String[]{"velo"});
+        DEFAULT_ALIASES.put("backtrack", new String[]{"bt"});
+        DEFAULT_ALIASES.put("hitbox", new String[]{"boxes", "hitboxes"});
+        DEFAULT_ALIASES.put("knockbackdelay", new String[]{"kbdelay", "kb"});
+        DEFAULT_ALIASES.put("aimassist", new String[]{"aimbot", "aim"});
+        DEFAULT_ALIASES.put("rodaimbot", new String[]{"rod", "rob"});
+        DEFAULT_ALIASES.put("clickassist", new String[]{"ca"});
+        DEFAULT_ALIASES.put("tpaura", new String[]{"tpa"});
+        DEFAULT_ALIASES.put("starautoclicker", new String[]{"starclicker", "click"});
+        // movement
+        DEFAULT_ALIASES.put("sprint", new String[]{"run"});
+        DEFAULT_ALIASES.put("bhop", new String[]{"bunnyhop"});
+        DEFAULT_ALIASES.put("fly", new String[]{"flight"});
+        DEFAULT_ALIASES.put("noslow", new String[]{"noslowdown"});
+        DEFAULT_ALIASES.put("longjump", new String[]{"lj"});
+        DEFAULT_ALIASES.put("teleport", new String[]{"tp"});
+        DEFAULT_ALIASES.put("vclip", new String[]{"clip", "noclip"});
+        DEFAULT_ALIASES.put("invmove", new String[]{"inv", "inventory"});
+        DEFAULT_ALIASES.put("keepsprint", new String[]{"keep"});
+        DEFAULT_ALIASES.put("timer", new String[]{"tickrate"});
+        // player
+        DEFAULT_ALIASES.put("scaffold", new String[]{"scaff", "tower"});
+        DEFAULT_ALIASES.put("nofall", new String[]{"fall"});
+        DEFAULT_ALIASES.put("freecam", new String[]{"fc", "camera"});
+        DEFAULT_ALIASES.put("fastmine", new String[]{"instamine"});
+        DEFAULT_ALIASES.put("fastplace", new String[]{"place", "build"});
+        DEFAULT_ALIASES.put("safewalk", new String[]{"shift", "edge"});
+        DEFAULT_ALIASES.put("waterbucket", new String[]{"bucket", "mlg"});
+        DEFAULT_ALIASES.put("ghosthand", new String[]{"interact"});
+        DEFAULT_ALIASES.put("autotool", new String[]{"tool"});
+        DEFAULT_ALIASES.put("autoswap", new String[]{"swap"});
+        DEFAULT_ALIASES.put("antiafk", new String[]{"afk"});
+        DEFAULT_ALIASES.put("fakelag", new String[]{"lag"});
+        DEFAULT_ALIASES.put("invmanager", new String[]{"inv", "chest"});
+        DEFAULT_ALIASES.put("bridgeassist", new String[]{"bridge"});
+        DEFAULT_ALIASES.put("bedaura", new String[]{"bed"});
+        DEFAULT_ALIASES.put("clutch", new String[]{"waterclutch"});
+        // render / visuals
+        DEFAULT_ALIASES.put("playeresp", new String[]{"esp", "player"});
+        DEFAULT_ALIASES.put("itemesp", new String[]{"esp", "items"});
+        DEFAULT_ALIASES.put("chestesp", new String[]{"esp", "chest"});
+        DEFAULT_ALIASES.put("blockesp", new String[]{"esp", "blocks"});
+        DEFAULT_ALIASES.put("bedesp", new String[]{"esp", "bed"});
+        DEFAULT_ALIASES.put("mobesp", new String[]{"esp", "mobs"});
+        DEFAULT_ALIASES.put("nametags", new String[]{"tags", "nametag"});
+        DEFAULT_ALIASES.put("tracers", new String[]{"traces", "lines"});
+        DEFAULT_ALIASES.put("chams", new String[]{"wallhack", "seegeometry"});
+        DEFAULT_ALIASES.put("xray", new String[]{"see"});
+        DEFAULT_ALIASES.put("nohurtcam", new String[]{"nohurt"});
+        DEFAULT_ALIASES.put("indicators", new String[]{"indic", "hp"});
+        DEFAULT_ALIASES.put("damagetags", new String[]{"dmgtags", "dmg"});
+        DEFAULT_ALIASES.put("breakprogress", new String[]{"brkprogress", "break"});
+        DEFAULT_ALIASES.put("hitparticles", new String[]{"particles", "hitfx"});
+        DEFAULT_ALIASES.put("tnntimer", new String[]{"tnt", "countdown"});
+        DEFAULT_ALIASES.put("trajectories", new String[]{"traj", "path"});
+        DEFAULT_ALIASES.put("itemphysics", new String[]{"physics"});
+        DEFAULT_ALIASES.put("saturation", new String[]{"sat"});
+        DEFAULT_ALIASES.put("antidebuff", new String[]{"debuff", "nobuff"});
+        DEFAULT_ALIASES.put("antishuffle", new String[]{"shuffle"});
+        DEFAULT_ALIASES.put("arrows", new String[]{"arrow"});
+        DEFAULT_ALIASES.put("extendcamera", new String[]{"extcam", "camera"});
+        DEFAULT_ALIASES.put("fallview", new String[]{"fall", "freecam"});
+        DEFAULT_ALIASES.put("freelook", new String[]{"fl", "freecam"});
+        DEFAULT_ALIASES.put("holdlook", new String[]{"hold"});
+        DEFAULT_ALIASES.put("blockoverlay", new String[]{"overlay"});
+        DEFAULT_ALIASES.put("hudedit", new String[]{"hudedit", "editor"});
+        // world
+        DEFAULT_ALIASES.put("antibot", new String[]{"botfilter", "nobot"});
+        DEFAULT_ALIASES.put("weather", new String[]{"rain", "clear"});
+        // fun
+        DEFAULT_ALIASES.put("extrabobbing", new String[]{"bobbing", "headbob"});
+        DEFAULT_ALIASES.put("flametrail", new String[]{"flame", "trail"});
+        DEFAULT_ALIASES.put("slyport", new String[]{"elytra"});
+        DEFAULT_ALIASES.put("spin", new String[]{"spinner"});
+        // other
+        DEFAULT_ALIASES.put("chatbypass", new String[]{"bypass", "chat"});
+        DEFAULT_ALIASES.put("disabler", new String[]{"dis"});
+        DEFAULT_ALIASES.put("anticheat", new String[]{"ac", "hyt", "hypixel"});
+        DEFAULT_ALIASES.put("fakechat", new String[]{"fakemsg"});
+        DEFAULT_ALIASES.put("latencyalerts", new String[]{"ping", "latency"});
+        DEFAULT_ALIASES.put("namehider", new String[]{"hide", "name"});
+        DEFAULT_ALIASES.put("viewpackets", new String[]{"packets"});
+        // minigames
+        DEFAULT_ALIASES.put("autorequeue", new String[]{"aq", "requeue"});
+        DEFAULT_ALIASES.put("bedwars", new String[]{"bw"});
+        DEFAULT_ALIASES.put("bridgeinfo", new String[]{"bridge"});
+        DEFAULT_ALIASES.put("duelsstats", new String[]{"duels"});
+        DEFAULT_ALIASES.put("murdermystery", new String[]{"mm", "murder"});
+        DEFAULT_ALIASES.put("skywars", new String[]{"sw"});
+        DEFAULT_ALIASES.put("speedbuilders", new String[]{"sb"});
+        DEFAULT_ALIASES.put("sumofences", new String[]{"sumo"});
+        DEFAULT_ALIASES.put("woolwars", new String[]{"ww"});
+        DEFAULT_ALIASES.put("autowho", new String[]{"who", "ah"});
+    }
+
+    /** 该模块用于搜索匹配的别名；同时匹配显示名与这些别名。 */
+    public String[] getAliases() {
+        return DEFAULT_ALIASES.get(getClass().getSimpleName().toLowerCase(Locale.ROOT));
+    }
+
+    public boolean matchesSearch(String query) {
+        if (getName().toLowerCase(Locale.ROOT).contains(query)) {
+            return true;
+        }
+        String[] aliases = getAliases();
+        if (aliases != null) {
+            for (String alias : aliases) {
+                if (alias.contains(query)) {
+                    return true;
+                }
+            }
+        }
+        return searchAcronym().startsWith(query);
+    }
+
+    /** 显示名每个词的首字母缩写（空格分隔 + 驼峰边界），如 "New Auto Clicker" -> "nac"。 */
+    private String searchAcronym() {
+        String name = getName();
+        StringBuilder sb = new StringBuilder();
+        char prev = ' ';
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if (Character.isLetterOrDigit(c)) {
+                boolean camelStart = Character.isLowerCase(prev) && Character.isUpperCase(c);
+                if (i == 0 || !Character.isLetterOrDigit(prev) || camelStart) {
+                    sb.append(Character.toLowerCase(c));
+                }
+            }
+            prev = c;
+        }
+        return sb.toString();
     }
 
     public Module(String moduleName, Module.category moduleCategory, int keycode) {
@@ -164,8 +308,55 @@ public class Module {
         ToggleSoundManager.moduleState(this, false);
     }
 
+    // getInfo 通用缓存：滑块等设置变化时全局使所有依赖设置的 info 一次性重算，帧内不再每帧格式化
+    private static int infoEpoch = 0;
+    private int cachedInfoEpoch = -1;
+    private String cachedInfoStr = null;
+
+    // 动态信息的短周期定时缓存（毫秒 TTL）：只在周期到了才重算，降到约 10Hz
+    private long timedCacheNextRefresh = 0L;
+    private String timedCachedInfo = null;
+
+    /** 任意设置被修改时调用，使全部缓存的 info 失效（下一帧重算一次）。 */
+    public static void invalidateInfoCaches() {
+        infoEpoch++;
+    }
+
     public String getInfo() {
+        long ttl = cacheTtlMillis();
+        if (ttl > 0) {
+            long now = System.currentTimeMillis();
+            if (timedCachedInfo == null || now >= timedCacheNextRefresh) {
+                timedCachedInfo = computeTimedInfo();
+                if (timedCachedInfo == null) {
+                    timedCachedInfo = "";
+                }
+                timedCacheNextRefresh = now + ttl;
+            }
+            return timedCachedInfo;
+        }
+        if (cachedInfoStr == null || cachedInfoEpoch != infoEpoch) {
+            cachedInfoStr = computeInfo();
+            if (cachedInfoStr == null) {
+                cachedInfoStr = "";
+            }
+            cachedInfoEpoch = infoEpoch;
+        }
+        return cachedInfoStr;
+    }
+
+    /** 仅读取设置值、每帧结果不变的模块应重写此方法并交由 getInfo 缓存。 */
+    protected String computeInfo() {
         return "";
+    }
+
+    /** 依赖实时状态、结果每帧变化的模块：重写此方法并返回毫秒 TTL，按短周期刷新缓存。 */
+    protected String computeTimedInfo() {
+        return "";
+    }
+
+    protected long cacheTtlMillis() {
+        return 0L;
     }
 
     public String getInfoUpdate() { // when called updates the modules info, and sorts if necessary

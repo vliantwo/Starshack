@@ -14,7 +14,7 @@ public class Timer extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeInfo() {
         return Utils.asWholeNum(speed.getInput());
     }
 

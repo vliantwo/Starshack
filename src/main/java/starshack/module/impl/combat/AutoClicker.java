@@ -57,7 +57,7 @@ public class AutoClicker extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeInfo() {
         double cps = targetCPS.getInput();
         return cps == Math.rint(cps) ? Integer.toString((int) cps) : Double.toString(Utils.round(cps, 1));
     }

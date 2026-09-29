@@ -227,7 +227,7 @@ public class KeepSprint extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeInfo() {
         return isWatchDog() ? "WatchDog " + (int) watchDogTicks.getInput() + "t" : MODES[(int) mode.getInput()];
     }
 

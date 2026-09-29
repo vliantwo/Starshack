@@ -19,6 +19,7 @@ public class StarAutoClickerConfig {
     // ---- 基础 ----
     public SliderSetting targetCPS;        // 目标 CPS（连续数值）
     public SliderSetting randomization;    // Randomization：0=Normal, 1=Extra, 2=Extra+
+    public ButtonSetting cycleClick;       // 周期点击调度：开=锁定平均 CPS，关=逐次独立随机
 
     // ---- 高级随机化（Extra+）----
     public ButtonSetting fatigue;          // 疲劳：越点越慢
@@ -53,6 +54,10 @@ public class StarAutoClickerConfig {
         this.randomization = new SliderSetting("Randomization",
                 RandomizationMode.NORMAL, RandomizationMode.NAMES);
         module.registerSetting(randomization);
+
+        // 周期点击调度：默认开启（推荐），关闭则回退为逐次独立随机延迟
+        this.cycleClick = new ButtonSetting("Cycle scheduling", true);
+        module.registerSetting(cycleClick);
 
         this.fatigue = new ButtonSetting("Fatigue", false);
         module.registerSetting(fatigue);

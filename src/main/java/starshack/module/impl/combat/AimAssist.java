@@ -67,7 +67,7 @@ public class AimAssist extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeInfo() {
         return AIM_MODES[(int) mode.getInput()];
     }
 
@@ -162,7 +162,7 @@ public class AimAssist extends Module {
                 continue;
             }
             if (fovVal != 360) {
-                float angleToEntity = RotationUtils.angle(entityPlayer.posX, entityPlayer.posZ);
+                float angleToEntity = RotationUtils.getYawTowards(entityPlayer.posX, entityPlayer.posZ);
                 if (!Utils.inFov(viewYaw, (float) fovVal, angleToEntity)) {
                     continue;
                 }

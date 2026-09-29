@@ -326,7 +326,7 @@ public class ShaderUtils {
             "    gl_FragColor = vec4(color.rgb, smoothedAlpha);// mix(quadColor, shadowColor, 0.0);\n" +
             "\n" +
             "}";
-    private final String roundedRectRise = "#version 120\n" +
+    private final String roundedRectEdge = "#version 120\n" +
             "\n" +
             "uniform vec2 u_size;\n" +
             "uniform float u_radius;\n" +
@@ -393,8 +393,8 @@ public class ShaderUtils {
                 case "roundedRectGradient":
                     fragmentShaderID = createShader(new ByteArrayInputStream(roundedRectGradient.getBytes()), GL_FRAGMENT_SHADER);
                     break;
-                case "roundedRectRise":
-                    fragmentShaderID = createShader(new ByteArrayInputStream(roundedRectRise.getBytes()), GL_FRAGMENT_SHADER);
+                case "roundedRectEdge":
+                    fragmentShaderID = createShader(new ByteArrayInputStream(roundedRectEdge.getBytes()), GL_FRAGMENT_SHADER);
                     break;
                 default:
                     fragmentShaderID = createShader(mc.getResourceManager().getResource(new ResourceLocation(fragmentShaderLoc)).getInputStream(), GL_FRAGMENT_SHADER);

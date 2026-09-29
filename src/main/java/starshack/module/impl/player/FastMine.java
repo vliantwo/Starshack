@@ -71,7 +71,7 @@ public class FastMine extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeInfo() {
         return ((int) multiplier.getInput() == multiplier.getInput() ? (int) multiplier.getInput() + "" : multiplier.getInput()) + multiplier.getSuffix();
     }
 }

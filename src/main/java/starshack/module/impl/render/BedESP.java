@@ -240,9 +240,14 @@ public class BedESP extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeTimedInfo() {
         int n = SharedBlockHighlightCache.get().totalBedFeet();
         return n > 0 ? String.valueOf(n) : "";
+    }
+
+    @Override
+    protected long cacheTtlMillis() {
+        return 100L;
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -414,11 +419,11 @@ public class BedESP extends Module {
         double x = blocks[0].getX() - mc.getRenderManager().viewerPosX;
         double y = blocks[0].getY() - mc.getRenderManager().viewerPosY;
         double z = blocks[0].getZ() - mc.getRenderManager().viewerPosZ;
-        GL11.glBlendFunc(770, 771);
-        GL11.glEnable(3042);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glEnable(GL11.GL_BLEND);
         GL11.glLineWidth(2.0f);
-        GL11.glDisable(3553);
-        GL11.glDisable(2929);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glDepthMask(false);
         int col = getCurrentColor();
         float drawA = (col >> 24 & 0xFF) / 255.0f;
@@ -451,10 +456,10 @@ public class BedESP extends Module {
             GL11.glLineWidth(2.0f);
         }
         GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        GL11.glEnable(3553);
-        GL11.glEnable(2929);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glDepthMask(true);
-        GL11.glDisable(3042);
+        GL11.glDisable(GL11.GL_BLEND);
     }
 
     private boolean isBedExposed(BlockPos[] pair) {
@@ -516,7 +521,7 @@ public class BedESP extends Module {
             GlStateManager.depthMask(false);
             GlStateManager.disableDepth();
             GlStateManager.enableBlend();
-            GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+            GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
 
             renderDefenseBackground(backgroundLeft, backgroundTop, backgroundRight, backgroundBottom);
             applyDefenseOverlayTextState();

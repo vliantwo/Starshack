@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import net.minecraftforge.common.MinecraftForge;
 import starshack.Stars;                    // ★ 新增（若主类路径不同请改这行）
 import starshack.event.PostSetSliderEvent;
+import starshack.module.Module;
 import starshack.module.setting.Setting;
 
 import java.math.BigDecimal;
@@ -153,8 +154,9 @@ public class SliderSetting extends Setting {
         markConfigDirty();
     }
 
-    // ★ 改动3：新增内联标脏（不依赖继承，直接访问 Stars）
+    // ★ 改动3：新增内联标脏（不依赖继承，直接访问 Stars）＋ 使 HUD info 缓存失效
     private void markConfigDirty() {
+        Module.invalidateInfoCaches();
         if (Stars.currentProfile != null && Stars.currentProfile.getModule() != null) {
             Stars.currentProfile.getModule().saved = false;
         }

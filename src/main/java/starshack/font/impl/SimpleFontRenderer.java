@@ -163,7 +163,7 @@ final class SimpleFontRenderer implements FontRenderer {
         GL11.glPushMatrix();
         GlStateManager.scale(0.5D, 0.5D, 0.5D);
         GlStateManager.enableBlend();
-        GlStateManager.blendFunc(770, 771);
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GL11.glColor4f((color >> 16 & 0xFF) / 255.0F, (color >> 8 & 0xFF) / 255.0F, (color & 0xFF) / 255.0F, alpha);
         GlStateManager.color((color >> 16 & 0xFF) / 255.0F, (color >> 8 & 0xFF) / 255.0F, (color & 0xFF) / 255.0F, alpha);
         GlStateManager.enableTexture2D();
@@ -438,7 +438,7 @@ final class SimpleFontRenderer implements FontRenderer {
     private static void drawLine(double x, double y, double x1, double y1, float width) {
         GL11.glDisable(GL_TEXTURE_2D);
         GL11.glLineWidth(width);
-        GL11.glBegin(1);
+        GL11.glBegin(GL11.GL_LINES);
         GL11.glVertex2d(x, y);
         GL11.glVertex2d(x1, y1);
         GL11.glEnd();

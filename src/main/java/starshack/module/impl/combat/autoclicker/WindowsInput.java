@@ -21,8 +21,8 @@ import java.util.Collections;
  * <p>
  * 若 JNA 不可用或当前非 Windows，所有方法为 no-op，可安全降级到兼容模式。
  * <p>
- * 兼容说明：Minecraft 1.8.9 自带 JNA 4.x，classpath 上解析到的是 4.x API，
- * 因此这里使用 Native.loadLibrary(...) + Library，而非 JNA 5.x 的 Native.load(...) / StdCallLibrary。
+ * 兼容说明：Minecraft 1.8.9 的 launchwrapper 自带 JNA 3.4.0，classpath 上解析到的是 3.4.0 API，
+ * 因此这里使用 Native.loadLibrary(...) + Library，而非 JNA 4/5.x 的 Native.load(...) / StdCallLibrary。
  */
 final class WindowsInput {
 

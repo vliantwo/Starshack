@@ -58,6 +58,7 @@ public class DamageTags extends Module {
     private final Map<Integer, HealthSnapshot> trackedStates = new HashMap<>();
     private final ConcurrentLinkedQueue<QueuedMetadataUpdate> pendingUpdates = new ConcurrentLinkedQueue<>();
     private World lastWorld;
+    private long lastTrackedUpdate;
 
     private static class QueuedMetadataUpdate {
         private final int entityId;
@@ -282,6 +283,12 @@ public class DamageTags extends Module {
             Entity entity = mc.theWorld.getEntityByID(entry.getKey());
             return !(entity instanceof EntityLivingBase) || entity instanceof EntityArmorStand || entity == mc.thePlayer;
         });
+
+        long now = System.currentTimeMillis();
+        if (now - lastTrackedUpdate < 500L) {
+            return;
+        }
+        lastTrackedUpdate = now;
 
         List<Entity> loaded = mc.theWorld.loadedEntityList;
         for (int i = 0, n = loaded.size(); i < n; i++) {

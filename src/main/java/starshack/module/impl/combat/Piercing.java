@@ -36,7 +36,7 @@ public class Piercing extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeInfo() {
         return sortModes[(int) sortMode.getInput()];
     }
 

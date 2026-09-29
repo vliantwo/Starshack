@@ -368,7 +368,7 @@ public class Nametags extends Module {
         GlStateManager.depthMask(false);
         GlStateManager.disableDepth();
         GlStateManager.enableBlend();
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
         GlStateManager.translate(0.0F, -10.0F, 0.0F);
 
         if ((showRect.isToggled() && bgOpacity.getInput() > 0.01) || bgBorder.isToggled() || state.relationshipColor != -1) {

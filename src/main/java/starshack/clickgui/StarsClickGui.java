@@ -101,6 +101,8 @@ public final class StarsClickGui extends ClickGui {
 
     private String searchQuery = "";
     private List<Module> filteredModules = new ArrayList<>();
+    private String cachedSearchQuery = null;
+    private Module.category cachedCategory = null;
     private boolean searching = false;
     private float scrollbarAlpha = 0F;
     private long lastScrollTime = 0L;
@@ -336,15 +338,21 @@ public final class StarsClickGui extends ClickGui {
     }
 
     private List<Module> getDisplayModules() {
-        List<Module> all = modules(selectedCategory);
-        if (searchQuery.isEmpty()) {
-            filteredModules = new ArrayList<>(all);
+        if (cachedCategory == selectedCategory && cachedSearchQuery != null && cachedSearchQuery.equals(searchQuery)) {
             return filteredModules;
         }
-        String q = searchQuery.toLowerCase(Locale.ROOT);
-        filteredModules = all.stream()
-                .filter(m -> m.getName().toLowerCase(Locale.ROOT).contains(q))
-                .collect(Collectors.toList());
+        List<Module> all = modules(selectedCategory);
+        filteredModules.clear();
+        if (searchQuery.isEmpty()) {
+            filteredModules.addAll(all);
+        } else {
+            String q = searchQuery.toLowerCase(Locale.ROOT);
+            for (Module m : all) {
+                if (m.matchesSearch(q)) filteredModules.add(m);
+            }
+        }
+        cachedCategory = selectedCategory;
+        cachedSearchQuery = searchQuery;
         return filteredModules;
     }
 

@@ -32,7 +32,7 @@ public class FakeLag extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeInfo() {
         return (int) packetDelaySlider.getInput() + "ms";
     }
 

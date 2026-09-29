@@ -48,6 +48,11 @@ public class StarAutoClicker extends Module {
     private int clickCount = 0;          // 用于 Fatigue
     private double driftOffset = 0;      // 漂移累计（Extra+）
 
+    // 复用对象，避免每帧 new（感知快照 / 三档策略各自固定实例 / 周期调度器）
+    private final Context context = new Context();
+    private final ClickStrategy[] strategies = new ClickStrategy[RandomizationMode.EXTRA_PLUS + 1];
+    private final CycleClickScheduler scheduler = new CycleClickScheduler(rand);
+
     // ============ 破块 ============
     private boolean isHoldingBlockBreak = false;
 
@@ -59,10 +64,8 @@ public class StarAutoClicker extends Module {
     }
 
     @Override
-    public String getInfo() {
-        double cps = cfg.getCPS();
-        String mode = RandomizationMode.nameOf(cfg.getRandomization());
-        return String.format("%.1f | %s", cps, mode);
+    protected String computeInfo() {
+        return String.format("%.1f | %s", cfg.getCPS(), RandomizationMode.nameOf(cfg.getRandomization()));
     }
 
     @Override
@@ -115,7 +118,7 @@ public class StarAutoClicker extends Module {
 
     // ================= 感知层 =================
     private Context collect() {
-        Context ctx = new Context();
+        Context ctx = context;
         ctx.leftDown = Mouse.isButtonDown(0);
         ctx.usingItem = mc.thePlayer.isUsingItem();
         ctx.inCreative = mc.thePlayer.capabilities.isCreativeMode;
@@ -169,11 +172,13 @@ public class StarAutoClicker extends Module {
     // ================= 策略层：下一次延迟 =================
     private long nextDelay() {
         int randomization = cfg.getRandomization();
-        double cps = cfg.getCPS();
+        int cps = (int) Math.round(cfg.getCPS());
 
-        // 根据 Randomization 档位选策略
-        ClickStrategy strategy = new RandomizationStrategy(randomization);
-        long delay = strategy.nextDelay(rand, cps);
+        // 周期点击调度层：开启时预生成一周期分布并锁定平均 CPS；关闭则回退逐次独立随机
+        ClickStrategy strategy = strategyFor(randomization);
+        long delay = cfg.cycleClick.isToggled()
+                ? scheduler.pollDelay(randomization, cps, strategy)
+                : strategy.nextDelay(rand, cps);
 
         // ---- Extra+ 专属：Fatigue（越点越慢）----
         if (randomization == RandomizationMode.EXTRA_PLUS && cfg.fatigue.isToggled()) {
@@ -199,11 +204,30 @@ public class StarAutoClicker extends Module {
         return Math.max(MIN_DELAY, Math.min(MAX_DELAY, delay));
     }
 
+    /** 按档位取（并缓存）策略实例，供周期调度器使用。 */
+    private ClickStrategy strategyFor(int randomization) {
+        ClickStrategy strategy = strategies[randomization];
+        if (strategy == null) {
+            strategy = new RandomizationStrategy(randomization);
+            strategies[randomization] = strategy;
+        }
+        return strategy;
+    }
+
     // ================= 执行层 =================
     private void doClick() {
-        // ★ 沿用反射手法：setButton(0, true) 模拟左键按下
+        // 优先 OS 级原生点击（WindowsInput / JNA SendInput，即"ghost click"），更贴近现代客户端；
+        // 若 JNA 类加载或调用抛错（个别环境异常），静默降级为反射模拟，保证功能可用。
+        if (WindowsInput.isAvailable()) {
+            try {
+                WindowsInput.sendLeftClick();
+                return;
+            } catch (Throwable ignored) {
+                // 降级到反射模拟
+            }
+        }
+        // 反射模拟：按下左键 + 触发一次 keybind tick
         ReflectionUtils.setButton(0, true);
-        // 配合一次 keybind tick，确保 Minecraft 识别到点击
         KeyBinding.onTick(mc.gameSettings.keyBindAttack.getKeyCode());
     }
 

@@ -90,7 +90,7 @@ public class NoSlow extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeInfo() {
         return NOSLOW_MODES[(int) mode.getInput()];
     }
 

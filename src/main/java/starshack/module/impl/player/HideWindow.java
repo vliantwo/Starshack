@@ -56,8 +56,13 @@ public class HideWindow extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeTimedInfo() {
         return hiddenGui != null ? "Hidden" : "";
+    }
+
+    @Override
+    protected long cacheTtlMillis() {
+        return 100L;
     }
 
     @Override

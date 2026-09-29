@@ -67,7 +67,7 @@ public class BridgeAssist extends Module {
     }
 
     @Override
-    public String getInfo() {
+    protected String computeInfo() {
         double offset = edgeOffset.getInput();
         return offset == Math.rint(offset) ? Integer.toString((int) offset) : Double.toString(Utils.round(offset, 2));
     }

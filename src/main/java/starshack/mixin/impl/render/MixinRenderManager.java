@@ -32,7 +32,7 @@ public class MixinRenderManager {
     private float cachedRotationPitch;
 
     @Inject(method = "renderEntityStatic", at = @At("HEAD"))
-    public void renderEntityStaticPre(final Entity entity, final float n, final boolean b, final CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
+    public void renderEntityStaticPre(final Entity entity, final float partialTicks, final boolean includeStatic, final CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         if (entity instanceof EntityPlayerSP && PreMotionEvent.setRenderYaw()) {
             final EntityPlayerSP player = (EntityPlayerSP) entity;
             cachedRotationPitch = player.rotationPitch;
@@ -43,7 +43,7 @@ public class MixinRenderManager {
     }
 
     @Inject(method = "renderEntityStatic", at = @At("RETURN"))
-    public void renderEntityStaticPost(final Entity entity, final float n, final boolean b, final CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
+    public void renderEntityStaticPost(final Entity entity, final float partialTicks, final boolean includeStatic, final CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         if (entity instanceof EntityPlayerSP && PreMotionEvent.setRenderYaw()) {
             final EntityPlayerSP player = (EntityPlayerSP) entity;
             player.prevRotationPitch = this.cachedPrevRotationPitch;
