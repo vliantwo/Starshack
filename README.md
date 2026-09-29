@@ -620,8 +620,8 @@ To do so, attach the following notices to the program. It is safest to attach th
 most effectively state the exclusion of warranty; and each file should have at least the
 "copyright" line and a pointer to where the full notice is found.
 
-    <one line to give the program's name and a brief idea of what it does.>
-    Copyright (C) 2026  vliantwo  <your@email>
+    StarShack - a modern, privacy-first Minecraft utility mod for 1.8.9 (Forge).
+    Copyright (C) 2026  vliantwo  <3284689009@qq.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -640,7 +640,7 @@ Also add information on how to contact you by electronic and paper mail.
 
 If the program does terminal interaction, make it output a short notice like this when it starts in an interactive mode:
 
-    <program>  Copyright (C) 2026  vliantwo
+    StarShack  Copyright (C) 2026  vliantwo
     This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
     This is free software, and you are welcome to redistribute it
     under certain conditions; type `show c' for details.
